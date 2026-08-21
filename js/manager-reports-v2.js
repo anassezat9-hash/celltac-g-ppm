@@ -1,5 +1,5 @@
 (function(){
-  const STYLE_ID='manager-reports-v7-style';
+  const STYLE_ID='manager-reports-v8-style';
   function style(){
     if(document.getElementById(STYLE_ID))return;
     const s=document.createElement('style');s.id=STYLE_ID;
@@ -51,7 +51,7 @@
     for(const tr of domRows){
       const c=tr.cells;if(c.length<13)continue;
       const serial=c[0].textContent.trim(),date=c[5].textContent.trim();
-      const r=byKey.get(serial+'|'+date);const path=r?.id?pathMap.get(r.id):null;const cell=c[12];
+      const r=byKey.get(serial+'|'+date);const path=r?.id?pathMap.get(r.id):null;const cell=c[11];
       if(!cell||!path)continue;
       if(cell.querySelector('.manager-report-link'))continue;
       cell.textContent='';
