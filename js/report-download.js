@@ -4,67 +4,87 @@
     if(document.getElementById(STYLE_ID)) return;
     const s=document.createElement('style');
     s.id=STYLE_ID;
-    s.textContent='.report-download-btn{display:block!important;width:100%;box-sizing:border-box;margin-top:5px;padding:6px 8px;font-size:11px;line-height:1.2;text-align:center;text-decoration:none}.report-download-btn.loading{opacity:.7;pointer-events:none}';
+    s.textContent='.report-download-btn{display:inline-block!important;min-width:92px;box-sizing:border-box;margin:0;padding:6px 8px;font-size:11px;line-height:1.2;text-align:center;text-decoration:none;white-space:nowrap}.report-download-btn.loading{opacity:.7;pointer-events:none}';
     document.head.appendChild(s);
   }
-  async function prepareButton(btn,id){
-    if(btn.dataset.ready||btn.dataset.loading) return;
-    btn.dataset.loading='1';
+  async function makeUrl(btn,id){
+    if(btn.dataset.busy) return;
+    btn.dataset.busy='1';
+    btn.textContent='⏳ تجهيز...';
     try{
       const {data,error}=await window.sb.from('visits').select('maintenance_report_path').eq('id',id).single();
       if(error||!data?.maintenance_report_path) throw new Error('no-report');
       const path=data.maintenance_report_path;
       const filename=(path.split('/').pop()||'maintenance-report').replace(/[^a-zA-Z0-9._-]/g,'_');
-      const signed=await window.sb.storage.from('maintenance-reports').createSignedUrl(path,3600,{download:filename});
-      if(!signed.data?.signedUrl) throw new Error('no-url');
-      btn.href=signed.data.signedUrl;
+      const r=await window.sb.storage.from('maintenance-reports').createSignedUrl(path,3600,{download:filename});
+      if(!r.data?.signedUrl) throw new Error('no-url');
+      btn.href=r.data.signedUrl;
+      btn.target='_blank';
+      btn.rel='noopener';
       btn.dataset.ready='1';
       btn.textContent='⬇ تحميل التقرير';
       btn.classList.remove('loading');
-      btn.target='_blank';
-      btn.rel='noopener';
-      btn.onclick=function(){
-        setTimeout(function(){
-          if(btn.dataset.ready==='1'){
-            btn.classList.remove('loading');
-            btn.textContent='⬇ تحميل التقرير';
-          }
-        },500);
-      };
     }catch(e){
-      btn.classList.remove('loading');
-      btn.textContent='⚠ تعذر تجهيز التحميل';
+      btn.textContent='⚠ لا يوجد تقرير';
       btn.title='تعذر إنشاء رابط تحميل التقرير';
+      btn.classList.remove('loading');
       console.error('Report download:',e);
-    }finally{delete btn.dataset.loading;}
+    }finally{delete btn.dataset.busy;}
   }
-  function scan(){
+  async function loadReportMap(){
     const tbody=document.getElementById('tbody');
-    if(!tbody) return;
-    tbody.querySelectorAll('button[onclick^="previewReport("]').forEach(view=>{
-      if(view.parentElement.querySelector('.report-download-btn')) return;
-      const m=view.getAttribute('onclick').match(/previewReport\(['\"]([^'\"]+)['\"]\)/);
-      if(!m) return;
-      const id=m[1];
+    if(!tbody||!window.sb) return;
+    const table=tbody.closest('table');
+    if(!table) return;
+    const headers=[...table.querySelectorAll('thead th')].map(x=>x.textContent.trim());
+    const serialIndex=headers.indexOf('Serial');
+    const dateIndex=headers.indexOf('تاريخ الزيارة');
+    const reportIndex=headers.indexOf('التقرير');
+    if(serialIndex<0||dateIndex<0||reportIndex<0) return;
+    const keys=[];
+    [...tbody.rows].forEach(tr=>{
+      const serial=tr.cells[serialIndex]?.textContent.trim();
+      const date=tr.cells[dateIndex]?.textContent.trim();
+      if(serial&&date) keys.push(serial+'|'+date);
+    });
+    if(!keys.length) return;
+    const dates=[...new Set(keys.map(k=>k.split('|')[1]))];
+    const {data,error}=await window.sb.from('visits').select('id,visit_date,maintenance_report_path,devices:device_id(serial_number)').in('visit_date',dates);
+    if(error){console.error('Report list:',error);return;}
+    const map=new Map();
+    (data||[]).forEach(v=>{
+      const serial=v.devices?.serial_number;
+      if(serial&&v.visit_date) map.set(serial+'|'+v.visit_date,v);
+    });
+    [...tbody.rows].forEach(tr=>{
+      const serial=tr.cells[serialIndex]?.textContent.trim();
+      const date=tr.cells[dateIndex]?.textContent.trim();
+      const cell=tr.cells[reportIndex];
+      const v=map.get(serial+'|'+date);
+      if(!cell||!v?.maintenance_report_path) return;
+      if(cell.querySelector('.report-download-btn')) return;
+      cell.textContent='';
       const a=document.createElement('a');
       a.className='btn btn-primary report-download-btn loading';
       a.href='#';
-      a.textContent='⬇ تجهيز التحميل...';
-      a.setAttribute('aria-label','تحميل التقرير');
+      a.textContent='⬇ تحميل التقرير';
       a.addEventListener('click',function(e){
-        if(!a.dataset.ready){e.preventDefault();prepareButton(a,id);}
+        if(!a.dataset.ready){e.preventDefault();makeUrl(a,v.id);}
       });
-      view.insertAdjacentElement('afterend',a);
+      cell.appendChild(a);
     });
   }
   function init(){
     addStyle();
-    scan();
+    loadReportMap();
     const tbody=document.getElementById('tbody');
-    if(tbody)new MutationObserver(scan).observe(tbody,{childList:true,subtree:true});
-    setTimeout(scan,500);
-    setTimeout(scan,1500);
-    setTimeout(scan,3000);
+    if(tbody){
+      let timer;
+      new MutationObserver(function(){clearTimeout(timer);timer=setTimeout(loadReportMap,150);}).observe(tbody,{childList:true,subtree:true});
+    }
+    setTimeout(loadReportMap,500);
+    setTimeout(loadReportMap,1500);
+    setTimeout(loadReportMap,3000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
