@@ -1,10 +1,22 @@
 (function(){
-  const STYLE_ID='manager-reports-v4-style';
+  const STYLE_ID='manager-reports-v5-style';
   function style(){
     if(document.getElementById(STYLE_ID))return;
     const s=document.createElement('style');s.id=STYLE_ID;
     s.textContent='.manager-report-link{display:inline-flex!important;align-items:center;justify-content:center;white-space:nowrap;min-width:105px;padding:6px 8px!important;font-size:11px!important;line-height:1.2!important;text-decoration:none!important;margin:0!important;cursor:pointer}.manager-report-loading{opacity:.7}.manager-report-error{font-size:11px;color:#b42318}';
     document.head.appendChild(s);
+  }
+  function reorderColumns(){
+    const table=document.querySelector('#tbody')?.closest('table');
+    if(!table)return;
+    const head=table.tHead?.rows?.[0];
+    if(!head||head.cells.length<13)return;
+    const h11=head.cells[11],h12=head.cells[12];
+    if((h11.textContent||'').trim()==='التقرير'&&(h12.textContent||'').trim()==='قطع الغيار')return;
+    if((h11.textContent||'').trim()==='قطع الغيار'&&(h12.textContent||'').trim()==='التقرير'){
+      h11.parentNode.insertBefore(h12,h11);
+      [...table.tBodies].forEach(tb=>[...tb.rows].forEach(tr=>{if(tr.cells.length>=13)tr.insertBefore(tr.cells[12],tr.cells[11])}));
+    }
   }
   async function getPathMap(){
     try{
@@ -24,6 +36,7 @@
   async function run(){
     const tbody=document.getElementById('tbody');
     if(!tbody||!window.sb)return;
+    reorderColumns();
     const domRows=[...tbody.rows];
     if(!domRows.length)return;
     let source=[];
@@ -32,7 +45,7 @@
     const pathMap=await getPathMap();
     domRows.forEach(tr=>{
       const c=tr.cells;if(c.length<13)return;
-      const serial=c[0].textContent.trim(),date=c[5].textContent.trim(),cell=c[12];
+      const serial=c[0].textContent.trim(),date=c[5].textContent.trim(),cell=c[11];
       const r=byKey.get(serial+'|'+date);
       const path=r?.id?pathMap.get(r.id):null;
       if(!cell||!path)return;
