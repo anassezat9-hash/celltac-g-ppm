@@ -1,5 +1,5 @@
 (function(){
-  const STYLE_ID='manager-reports-v5-style';
+  const STYLE_ID='manager-reports-v6-style';
   function style(){
     if(document.getElementById(STYLE_ID))return;
     const s=document.createElement('style');s.id=STYLE_ID;
@@ -33,6 +33,27 @@
       const m=new Map();(data||[]).forEach(v=>{if(v.maintenance_report_path)m.set(v.id,v.maintenance_report_path)});return m;
     }catch(e){console.error('manager report links:',e);return new Map()}
   }
+  async function openReport(a,path){
+    try{
+      const filename=(path.split('/').pop()||'maintenance-report').replace(/[^a-zA-Z0-9._-]/g,'_');
+      const result=await window.sb.storage.from('maintenance-reports').createSignedUrl(path,3600);
+      if(result.error||!result.data?.signedUrl)throw new Error(result.error?.message||'no signed url');
+      let url=result.data.signedUrl;
+      url+=(url.includes('?')?'&':'?')+'download='+encodeURIComponent(filename);
+      a.href=url;
+      a.target='_blank';
+      a.rel='noopener noreferrer';
+      a.classList.remove('manager-report-loading','manager-report-error');
+      a.textContent='⬇ تحميل التقرير';
+      // The first click must actually open the report; setting href alone after preventDefault does not navigate.
+      window.open(url,'_blank','noopener,noreferrer');
+    }catch(err){
+      a.textContent='⚠ تعذر التحميل';
+      a.classList.remove('manager-report-loading');
+      a.classList.add('manager-report-error');
+      console.error('Report download:',err);
+    }
+  }
   async function run(){
     const tbody=document.getElementById('tbody');
     if(!tbody||!window.sb)return;
@@ -55,13 +76,11 @@
       a.className='btn btn-primary manager-report-link manager-report-loading';
       a.href='#';a.textContent='⬇ تحميل التقرير';
       a.addEventListener('click',async e=>{
-        e.preventDefault();if(a.dataset.busy)return;a.dataset.busy='1';a.textContent='⏳ تجهيز...';
-        try{
-          const filename=(path.split('/').pop()||'maintenance-report').replace(/[^a-zA-Z0-9._-]/g,'_');
-          const r=await window.sb.storage.from('maintenance-reports').createSignedUrl(path,3600,{download:filename});
-          if(!r.data?.signedUrl)throw new Error('no signed url');
-          a.href=r.data.signedUrl;a.target='_blank';a.rel='noopener';a.textContent='⬇ تحميل التقرير';a.classList.remove('manager-report-loading');
-        }catch(err){a.textContent='⚠ تعذر التحميل';a.classList.add('manager-report-error');console.error('Report download:',err)}finally{delete a.dataset.busy}
+        e.preventDefault();
+        if(a.dataset.busy)return;
+        a.dataset.busy='1';
+        a.textContent='⏳ تجهيز...';
+        try{await openReport(a,path)}finally{delete a.dataset.busy}
       });
       cell.appendChild(a);
     });
