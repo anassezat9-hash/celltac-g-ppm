@@ -1,0 +1,39 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'CelltacGPPM-Android/**'
+      - '.github/workflows/android-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Make Gradle executable
+        working-directory: CelltacGPPM-Android
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        working-directory: CelltacGPPM-Android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CelltacGPPM-debug-apk
+          path: CelltacGPPM-Android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
