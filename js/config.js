@@ -1,6 +1,6 @@
 window.SUPABASE_URL="https://zyzyavjwdxprwjutnkgf.supabase.co";
 window.SUPABASE_ANON_KEY="sb_publishable_dE_yRy81Z9iVdx9ccOYCmg_8RVITHqA";
-const s=document.createElement('script');s.src='js/hospital-type.js';document.head.appendChild(s);
+const s=document.createElement('script');s.src='js/hospital-type.js?v=2';document.head.appendChild(s);
 const rd=document.createElement('script');rd.src='js/report-download.js?v=7';document.head.appendChild(rd);
-const mr=document.createElement('script');mr.src='js/manager-reports-v2.js?v=10';document.head.appendChild(mr);
-const mt=document.createElement('script');mt.src='js/manager-table-fix.js?v=2';document.head.appendChild(mt);
+const mr=document.createElement('script');mr.src='js/manager-reports-v2.js?v=11';document.head.appendChild(mr);
+const mt=document.createElement('script');mt.src='js/manager-table-fix.js?v=3';document.head.appendChild(mt);
