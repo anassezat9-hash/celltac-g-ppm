@@ -2,11 +2,16 @@ package com.celltac.gppm;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Base64;
+import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -14,7 +19,11 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.view.View;
 import android.widget.ProgressBar;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 
 public class MainActivity extends Activity {
     private static final int FILE_CHOOSER_REQ = 1001;
@@ -34,9 +43,6 @@ public class MainActivity extends Activity {
 
     private void configureWebView() {
         WebSettings s = webView.getSettings();
-
-        // Desktop-site mode: make the WebView identify itself as a desktop Chrome
-        // browser and use the page's desktop viewport instead of the mobile layout.
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
@@ -48,17 +54,13 @@ public class MainActivity extends Activity {
         s.setUseWideViewPort(true);
         s.setLoadWithOverviewMode(true);
         s.setTextZoom(100);
-        s.setUserAgentString(
-                "Mozilla/5.0 (X11; Linux x86_64) " +
-                "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                "Chrome/131.0.0.0 Safari/537.36 CelltacGPPM-Android/1.0"
-        );
+        s.setUserAgentString("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 CelltacGPPM-Android/1.0");
+        webView.addJavascriptInterface(new DownloadBridge(), "AndroidDownload");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                if (url.startsWith("https://anassezat9-hash.github.io/") ||
-                    url.startsWith("https://zyzyavjwdxprwjutnkgf.supabase.co/")) return false;
+                if (url.startsWith("https://anassezat9-hash.github.io/") || url.startsWith("https://zyzyavjwdxprwjutnkgf.supabase.co/")) return false;
                 startActivity(new Intent(Intent.ACTION_VIEW, request.getUrl()));
                 return true;
             }
@@ -75,19 +77,60 @@ public class MainActivity extends Activity {
                 startActivityForResult(intent, FILE_CHOOSER_REQ);
                 return true;
             }
-
             @Override public void onPermissionRequest(final PermissionRequest request) {
                 runOnUiThread(() -> {
                     if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) request.grant(request.getResources());
                     else request.deny();
                 });
             }
-
             @Override public void onProgressChanged(WebView view, int newProgress) {
                 progress.setProgress(newProgress);
                 progress.setVisibility(newProgress >= 100 ? View.GONE : View.VISIBLE);
             }
         });
+    }
+
+    public class DownloadBridge {
+        @JavascriptInterface
+        public void saveBase64(String filename, String base64) {
+            runOnUiThread(() -> saveFile(filename, base64));
+        }
+    }
+
+    private void saveFile(String filename, String base64) {
+        try {
+            String safe = filename == null ? "CelltacGPPM_Report.xlsx" : filename.replaceAll("[^a-zA-Z0-9._-]", "_");
+            if (!safe.toLowerCase().endsWith(".xlsx")) safe += ".xlsx";
+            byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+            OutputStream out;
+            Uri uri = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Downloads.DISPLAY_NAME, safe);
+                values.put(MediaStore.Downloads.MIME_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                values.put(MediaStore.Downloads.IS_PENDING, 1);
+                uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                if (uri == null) throw new Exception("Unable to create Downloads file");
+                out = getContentResolver().openOutputStream(uri);
+                if (out == null) throw new Exception("Unable to open Downloads file");
+                out.write(bytes);
+                out.close();
+                ContentValues done = new ContentValues();
+                done.put(MediaStore.Downloads.IS_PENDING, 0);
+                getContentResolver().update(uri, done, null, null);
+            } else {
+                File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                if (!dir.exists()) dir.mkdirs();
+                File file = new File(dir, safe);
+                out = new FileOutputStream(file);
+                out.write(bytes);
+                out.close();
+            }
+            webView.evaluateJavascript("window.__nativeDownloadResult && window.__nativeDownloadResult(true,'" + safe.replace("'", "") + "')", null);
+        } catch (Exception e) {
+            webView.evaluateJavascript("window.__nativeDownloadResult && window.__nativeDownloadResult(false,'" + e.getMessage().replace("'", "") + "')", null);
+        }
     }
 
     @Override public void onBackPressed() {
