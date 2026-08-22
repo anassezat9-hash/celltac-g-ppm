@@ -5,12 +5,14 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -19,7 +21,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.view.View;
+import android.view.Window;
 import android.widget.ProgressBar;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,6 +36,15 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Keep Android system bars visually consistent with the web dashboard.
+        Window window = getWindow();
+        window.setStatusBarColor(Color.rgb(6, 78, 89));
+        window.setNavigationBarColor(Color.rgb(6, 78, 89));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            window.getDecorView().setSystemUiVisibility(0);
+        }
+
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webView);
         progress = findViewById(R.id.progress);
@@ -51,10 +62,18 @@ public class MainActivity extends Activity {
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
+
+        // IMPORTANT: use WebView's normal MOBILE user agent.
+        // The previous build forced a desktop Chrome UA, which made the website
+        // render its desktop layout inside Android instead of its responsive UI.
         s.setUseWideViewPort(true);
-        s.setLoadWithOverviewMode(true);
+        s.setLoadWithOverviewMode(false);
         s.setTextZoom(100);
-        s.setUserAgentString("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 CelltacGPPM-Android/1.0");
+        // Do not call setUserAgentString(): the default Android WebView UA is mobile.
+
+        webView.setVerticalScrollBarEnabled(false);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         webView.addJavascriptInterface(new DownloadBridge(), "AndroidDownload");
 
         webView.setWebViewClient(new WebViewClient() {
@@ -77,12 +96,14 @@ public class MainActivity extends Activity {
                 startActivityForResult(intent, FILE_CHOOSER_REQ);
                 return true;
             }
+
             @Override public void onPermissionRequest(final PermissionRequest request) {
                 runOnUiThread(() -> {
                     if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) request.grant(request.getResources());
                     else request.deny();
                 });
             }
+
             @Override public void onProgressChanged(WebView view, int newProgress) {
                 progress.setProgress(newProgress);
                 progress.setVisibility(newProgress >= 100 ? View.GONE : View.VISIBLE);
@@ -129,7 +150,8 @@ public class MainActivity extends Activity {
             }
             webView.evaluateJavascript("window.__nativeDownloadResult && window.__nativeDownloadResult(true,'" + safe.replace("'", "") + "')", null);
         } catch (Exception e) {
-            webView.evaluateJavascript("window.__nativeDownloadResult && window.__nativeDownloadResult(false,'" + e.getMessage().replace("'", "") + "')", null);
+            String error = e.getMessage() == null ? "Download failed" : e.getMessage();
+            webView.evaluateJavascript("window.__nativeDownloadResult && window.__nativeDownloadResult(false,'" + error.replace("'", "") + "')", null);
         }
     }
 
