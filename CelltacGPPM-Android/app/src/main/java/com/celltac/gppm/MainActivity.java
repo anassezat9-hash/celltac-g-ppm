@@ -34,6 +34,9 @@ public class MainActivity extends Activity {
 
     private void configureWebView() {
         WebSettings s = webView.getSettings();
+
+        // Desktop-site mode: make the WebView identify itself as a desktop Chrome
+        // browser and use the page's desktop viewport instead of the mobile layout.
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setAllowFileAccess(true);
@@ -42,7 +45,14 @@ public class MainActivity extends Activity {
         s.setSupportZoom(false);
         s.setBuiltInZoomControls(false);
         s.setDisplayZoomControls(false);
-        s.setUserAgentString(s.getUserAgentString() + " CelltacGPPM-Android/1.0");
+        s.setUseWideViewPort(true);
+        s.setLoadWithOverviewMode(true);
+        s.setTextZoom(100);
+        s.setUserAgentString(
+                "Mozilla/5.0 (X11; Linux x86_64) " +
+                "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                "Chrome/131.0.0.0 Safari/537.36 CelltacGPPM-Android/1.0"
+        );
 
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
