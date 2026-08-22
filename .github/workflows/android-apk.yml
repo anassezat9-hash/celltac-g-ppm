@@ -30,9 +30,9 @@ jobs:
 
       - name: Clean build
         working-directory: CelltacGPPM-Android
-        run: gradle --no-daemon clean assembleDebug --stacktrace
+        run: gradle --no-daemon --stacktrace clean assembleDebug
 
-      - name: Verify APK is a real installable package
+      - name: Verify APK is installable
         shell: bash
         run: |
           set -euo pipefail
@@ -40,7 +40,7 @@ jobs:
           test -f "$APK"
           SIZE=$(stat -c%s "$APK")
           echo "APK size: ${SIZE} bytes"
-          test "$SIZE" -gt 1000
+          test "$SIZE" -gt 10000
           BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
           "$BUILD_TOOLS/aapt2" dump badging "$APK" | tee /tmp/apk-badging.txt
           grep -q "package: name='com.celltac.gppm'" /tmp/apk-badging.txt
@@ -51,12 +51,11 @@ jobs:
 
       - name: Rename verified APK
         shell: bash
-        run: |
-          cp CelltacGPPM-Android/app/build/outputs/apk/debug/app-debug.apk CelltacGPPM-v1.0.2-debug.apk
+        run: cp CelltacGPPM-Android/app/build/outputs/apk/debug/app-debug.apk CelltacGPPM-v1.0.3-debug.apk
 
       - name: Upload verified APK
         uses: actions/upload-artifact@v4
         with:
-          name: CelltacGPPM-v1.0.2-verified-apk
-          path: CelltacGPPM-v1.0.2-debug.apk
+          name: CelltacGPPM-v1.0.3-verified-apk
+          path: CelltacGPPM-v1.0.3-debug.apk
           if-no-files-found: error
