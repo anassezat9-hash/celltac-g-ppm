@@ -1,0 +1,60 @@
+name: Fix manager dashboard
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch common.js
+        shell: bash
+        run: |
+          cat >> js/common.js <<'EOF'
+
+/* Manager dashboard/database fixes: real device count + governorate filters */
+(async()=>{try{
+ const {data:{user}}=await sb.auth.getUser();
+ if(!user)return;
+ const {data:p}=await sb.from('profiles').select('role,active').eq('id',user.id).single();
+ if(!p?.active||p.role!=='manager')return;
+ const countEl=document.getElementById('devices');
+ if(countEl){
+   const {count,error}=await sb.from('devices').select('id',{count:'exact',head:true});
+   if(!error)countEl.textContent=String(count??0);
+ }
+ const isManagerPage=!!document.getElementById('tbody');
+ const isDatabasePage=!!document.getElementById('devicesBody');
+ if(!isManagerPage&&!isDatabasePage)return;
+ if(document.getElementById('realGovernorateFilter'))return;
+ const {data:ds,error}=await sb.from('devices').select('id,serial_number,hospital_name,hospital_type,governorate,installation_date,model').order('hospital_name',{ascending:true});
+ if(error)return;
+ const devices=ds||[];
+ const govs=[...new Set(devices.map(d=>String(d.governorate||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar'));
+ const card=document.createElement('div');
+ card.className='card';
+ card.id='realGovernorateFilter';
+ card.style.cssText='margin-bottom:14px;border-right:4px solid #0f6673';
+ card.innerHTML=`<div class="toolbar"><div><h2>🏥 الأجهزة حسب المحافظة</h2><div class="small">اختار المحافظة لعرض الأجهزة المسجلة بها.</div></div><b id="realGovCount" style="font-size:28px">${devices.length}</b></div><div class="filters"><div><label>المحافظة</label><select id="realGovSelect"><option value="">كل المحافظات</option>${govs.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('')}</select></div></div><div class="table-wrap"><table><thead><tr><th>Serial</th><th>الجهة</th><th>نوع الجهة</th><th>المحافظة</th><th>تاريخ التركيب</th><th>الموديل</th></tr></thead><tbody id="realGovBody"></tbody></table></div>`;
+ const parent=document.querySelector('.container');
+ if(!parent)return;
+ const anchor=isManagerPage?[...document.querySelectorAll('.card')].find(c=>c.querySelector('h2')?.textContent.includes('سجل الزيارات')):null;
+ parent.insertBefore(card,anchor||parent.firstChild?.nextSibling||null);
+ const select=document.getElementById('realGovSelect');
+ const draw=()=>{
+   const g=select.value;
+   const a=devices.filter(d=>!g||String(d.governorate||'')===g);
+   document.getElementById('realGovCount').textContent=String(a.length);
+   document.getElementById('realGovBody').innerHTML=a.length?a.map(d=>`<tr><td><b>${esc(d.serial_number)}</b></td><td>${esc(d.hospital_name)}</td><td>${esc(d.hospital_type||'غير محدد')}</td><td>${esc(d.governorate||'—')}</td><td>${esc(d.installation_date||'—')}</td><td>${esc(d.model||'—')}</td></tr>`).join(''):'<tr><td colspan="6">لا توجد أجهزة في هذه المحافظة.</td></tr>';
+ };
+ select.onchange=draw;draw();
+}catch(e){console.error('Manager dashboard fixes:',e)}})();
+EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/common.js
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply manager dashboard fixes"
+          git push
