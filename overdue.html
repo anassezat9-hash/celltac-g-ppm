@@ -3,15 +3,15 @@
 </style></head><body><header class="header"><div class="brand">Celltac G PPM — متابعة الأجهزة المتأخرة</div><div class="userbar"><a class="btn btn-light" href="manager.html">📊 لوحة المدير</a><span id="who"></span><button class="btn btn-light" onclick="logout()">خروج</button></div></header><div class="container">
 <div class="card"><div class="toolbar"><div><h2>⏰ متابعة الأجهزة المتأخرة</h2><div class="small">اضغط على فئة التأخير لعرض جدول هذه الفئة فقط. الفلاتر تعمل داخل الفئة المختارة.</div></div><div style="text-align:center"><b id="overdueCount" class="overdue-count">0</b><div class="small" id="selectedLabel">اختر فئة</div></div></div>
 <div class="overdue-summary">
-<div class="summary-box">🆕 بدون أي زيارة<b id="neverCount">0</b><span class="small-hint">للعرض اختر إحدى فئات التأخير</span></div>
+<div class="summary-box selectable" data-bucket="never" onclick="selectBucket('never')">🆕 بدون أي زيارة<b id="neverCount">0</b><span class="small-hint">اضغط لعرض الأجهزة بدون زيارة</span></div>
 <div class="summary-box selectable" data-bucket="30" onclick="selectBucket(30)">📅 آخر زيارة 30+ يوم<b id="oldCount">0</b><span class="small-hint">اضغط لعرض 30+ فقط</span></div>
 <div class="summary-box selectable" data-bucket="60" onclick="selectBucket(60)">🔴 متأخرة 60+ يوم<b id="urgentCount">0</b><span class="small-hint">اضغط لعرض 60+ فقط</span></div>
 <div class="summary-box selectable" data-bucket="90" onclick="selectBucket(90)">⚠️ متأخرة 90+ يوم<b id="criticalCount">0</b><span class="small-hint">اضغط لعرض 90+ فقط</span></div>
 </div>
 <div class="overdue-filters"><div><label>📍 المحافظة</label><select id="govFilter"><option value="">كل المحافظات</option></select></div><div><label>🔎 بحث</label><input id="searchFilter" placeholder="Serial أو اسم الجهة أو المهندس"></div></div>
 <div id="msg" class="msg"></div></div>
-<div class="card" style="margin-top:14px"><div class="toolbar"><div><h2 id="tableTitle">📋 جدول الأجهزة</h2><div class="overdue-help" id="tableHelp">اختر +30 أو +60 أو +90 من الأعلى لعرض الفئة المطلوبة فقط.</div></div></div>
-<div class="table-wrap"><table class="overdue-table"><thead><tr><th>Serial</th><th>الجهة</th><th>المحافظة</th><th>آخر زيارة</th><th>مدة التأخير</th><th>المهندس</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody id="overdueList"><tr><td colspan="8"><div class="overdue-empty">👆 اختر فئة +30 أو +60 أو +90 لعرض جدولها فقط.</div></td></tr></tbody></table></div></div>
+<div class="card" style="margin-top:14px"><div class="toolbar"><div><h2 id="tableTitle">📋 جدول الأجهزة</h2><div class="overdue-help" id="tableHelp">اختر الفئة المطلوبة من الأعلى لعرض الأجهزة المطابقة فقط.</div></div></div>
+<div class="table-wrap"><table class="overdue-table"><thead><tr><th>Serial</th><th>الجهة</th><th>المحافظة</th><th>آخر زيارة</th><th>مدة التأخير</th><th>المهندس</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody id="overdueList"><tr><td colspan="8"><div class="overdue-empty">👆 اختر الفئة المطلوبة لعرض جدولها فقط.</div></td></tr></tbody></table></div></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js?v=overdue4"></script><script src="js/common.js?v=overdue4"></script><script>
 let profile,rows=[],allDevices=[],filteredRows=[],selectedBucket=null;const $=id=>document.getElementById(id);
@@ -42,7 +42,7 @@ function updateCounts(){
 function selectBucket(bucket){
  selectedBucket=bucket;
  document.querySelectorAll('.summary-box.selectable').forEach(el=>el.classList.toggle('active',Number(el.dataset.bucket)===bucket));
- const label=bucket===30?'+30 يوم':bucket===60?'+60 يوم':'+90 يوم';
+ const label=bucket==='never'?'بدون أي زيارة':bucket===30?'+30 يوم':bucket===60?'+60 يوم':'+90 يوم';
  $('selectedLabel').textContent='الفئة: '+label;
  $('tableTitle').textContent='📋 جدول الأجهزة '+label;
  $('tableHelp').textContent='يظهر هنا فقط الأجهزة المطابقة لفئة '+label+'، مع تطبيق الفلاتر الحالية.';
@@ -51,14 +51,14 @@ function selectBucket(bucket){
 function updateSelectedCount(){
  if(selectedBucket===null){$('overdueCount').textContent='0';return}
  const g=$('govFilter').value.trim().toLowerCase(),q=$('searchFilter').value.trim().toLowerCase();
- const base=rows.filter(r=>r.kind==='old'&&r.days>=selectedBucket);
+ const base=rows.filter(r=>selectedBucket==='never'?r.kind==='never':r.kind==='old'&&r.days>=selectedBucket);
  const count=base.filter(r=>(!g||String(r.governorate||'').toLowerCase()===g)&&(!q||[r.serial_number,r.hospital_name,r.engineer_name].some(x=>String(x||'').toLowerCase().includes(q)))).length;
  $('overdueCount').textContent=count;
 }
 function applyFilters(){
  if(selectedBucket===null){filteredRows=[];render();updateSelectedCount();return}
  const g=$('govFilter').value.trim().toLowerCase(),q=$('searchFilter').value.trim().toLowerCase();
- filteredRows=rows.filter(r=>r.kind==='old'&&r.days>=selectedBucket)
+ filteredRows=rows.filter(r=>selectedBucket==='never'?r.kind==='never':r.kind==='old'&&r.days>=selectedBucket)
    .filter(r=>(!g||String(r.governorate||'').toLowerCase()===g)&&(!q||[r.serial_number,r.hospital_name,r.engineer_name].some(x=>String(x||'').toLowerCase().includes(q))));
  $('overdueCount').textContent=filteredRows.length;render();
 }
@@ -74,7 +74,7 @@ function render(){
  $('overdueList').innerHTML=filteredRows.map(r=>{
   const level=r.days>=90?'critical':r.days>=60?'urgent':'normal';
   const label=r.days>=90?'⚠ متابعة عاجلة':r.days>=60?'🔴 متابعة مهمة':'🟠 يحتاج متابعة';
-  return '<tr><td><b>'+esc(r.serial_number)+'</b></td><td>'+esc(r.hospital_name||'جهة غير مسجلة')+'</td><td>'+esc(r.governorate||'—')+'</td><td>'+esc(r.visit_date||'—')+'</td><td><b>'+esc(String(r.days)+' يوم')+'</b></td><td>'+esc(r.engineer_name||'—')+'</td><td><span class="overdue-badge '+level+'">'+label+'</span></td><td><div class="overdue-actions"><button class="btn btn-primary" data-open-serial="'+esc(r.serial_number)+'">📋 سجل الزيارات</button><button class="btn" data-copy-serial="'+esc(r.serial_number)+'">📌 نسخ</button></div></td></tr>';
+  return '<tr><td><b>'+esc(r.serial_number)+'</b></td><td>'+esc(r.hospital_name||'جهة غير مسجلة')+'</td><td>'+esc(r.governorate||'—')+'</td><td>'+esc(r.kind==='never'?'لم تتم زيارة':(r.visit_date||'—'))+'</td><td><b>'+esc(String(r.days)+' يوم')+'</b></td><td>'+esc(r.engineer_name||'—')+'</td><td><span class="overdue-badge '+level+'">'+label+'</span></td><td><div class="overdue-actions"><button class="btn btn-primary" data-open-serial="'+esc(r.serial_number)+'">📋 سجل الزيارات</button><button class="btn" data-copy-serial="'+esc(r.serial_number)+'">📌 نسخ</button></div></td></tr>';
  }).join('');
  $('overdueList').querySelectorAll('[data-open-serial]').forEach(btn=>btn.onclick=()=>openInManager(btn.getAttribute('data-open-serial')));
  $('overdueList').querySelectorAll('[data-copy-serial]').forEach(btn=>btn.onclick=()=>copySerial(btn.getAttribute('data-copy-serial')));
