@@ -1,0 +1,52 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>Celltac G PPM — تقرير العينات</title><link rel="stylesheet" href="assets/style.css?v=20261008-samples1"><style>
+body{background:#f5f8fa}.samples-wrap{max-width:1400px;margin:0 auto}.back{margin-bottom:12px}.filter-grid{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:12px}.filter-box{border:1px solid #e5eaf0;border-radius:12px;padding:12px;background:#fff}.entity-tools{display:flex;gap:8px;align-items:center;margin-bottom:8px}.entity-tools input{flex:1}.entity-list{max-height:230px;overflow:auto;border:1px solid #e5eaf0;border-radius:10px;padding:7px;background:#fbfcfd}.entity-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px}.entity-item:hover{background:#f1f5f9}.entity-item input{width:17px;height:17px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}.sum{background:#fff;border-radius:14px;padding:14px;border:1px solid #e5eaf0;text-align:center}.sum span{display:block;font-size:12px;color:#64748b}.sum b{display:block;font-size:25px;margin-top:4px}.table-wrap{overflow:auto}.report-table{width:100%;border-collapse:collapse;min-width:850px}.report-table th,.report-table td{padding:9px 7px;border-bottom:1px solid #e7edf2;text-align:center;font-size:12px}.report-table th{background:#f3f6f8;font-weight:800;position:sticky;top:0}.total-row{font-weight:900;background:#eef7f8}.muted{color:#64748b}.msg{margin-top:10px}.empty{padding:22px;text-align:center;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc}@media(max-width:800px){.filter-grid,.summary{grid-template-columns:1fr}.report-table{min-width:780px}}
+</style></head><body><header class="header"><div class="brand">Celltac G PPM — تقرير العينات</div><div class="userbar"><a class="btn btn-light" href="manager.html">↩️ العودة للمدير</a><span id="who"></span><button class="btn btn-light" onclick="logout()">خروج</button></div></header><div class="container samples-wrap"><div class="back"><h1 style="margin:0 0 4px">🧪 إجمالي العينات المحسوبة</h1><div class="small">اختار فترة زمنية وجهة واحدة أو أكثر، وسيتم حساب العينات من فرق Total Count بين كل زيارة والقراءة السابقة لنفس الجهاز.</div></div>
+<div class="card"><h2>🔎 خيارات التقرير</h2><div class="filter-grid"><div class="filter-box"><label>من تاريخ</label><input id="from" type="date"><label style="margin-top:9px;display:block">إلى تاريخ</label><input id="to" type="date"></div><div class="filter-box"><label>الجهات</label><div class="entity-tools"><input id="entitySearch" placeholder="بحث باسم الجهة"><button id="allBtn" class="btn" type="button">تحديد الكل</button></div><div id="entities" class="entity-list"></div></div></div><div class="actions"><button id="run" class="btn btn-primary">📊 عرض التقرير</button><button id="clear" class="btn" type="button">مسح الاختيارات</button></div><div id="msg" class="msg"></div></div>
+<div id="result" style="display:none"><div class="summary"><div class="sum"><span>إجمالي العينات</span><b id="totalSamples">0</b></div><div class="sum"><span>عدد الجهات</span><b id="totalHospitals">0</b></div><div class="sum"><span>عدد الأجهزة</span><b id="totalDevices">0</b></div><div class="sum"><span>عدد الزيارات المحتسبة</span><b id="totalVisits">0</b></div></div>
+<div class="card"><h2>📋 ملخص العينات حسب الجهة</h2><div class="table-wrap"><table class="report-table"><thead><tr><th>الجهة</th><th>عدد الأجهزة</th><th>عدد الزيارات</th><th>إجمالي العينات</th></tr></thead><tbody id="summaryBody"></tbody></table></div></div>
+<div class="card"><h2>📑 التفاصيل</h2><div class="table-wrap"><table class="report-table"><thead><tr><th>التاريخ</th><th>الجهة</th><th>Serial</th><th>القراءة السابقة</th><th>Total Count</th><th>العينات</th><th>المهندس</th></tr></thead><tbody id="detailBody"></tbody></table></div></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js?v=20261008-samples1"></script><script src="js/common.js?v=20261008-samples1"></script><script>
+let profile,visits=[],entities=[];
+const $=id=>document.getElementById(id);
+(async()=>{profile=await requireRole('manager');if(!profile)return;$('who').textContent=profile.full_name;await loadData();})();
+async function loadData(){
+ const {data,error}=await sb.from('visits').select('id,device_id,engineer_id,visit_date,total_count,created_at,devices:device_id(serial_number,hospital_name),engineers:engineer_id(name)').order('visit_date',{ascending:true}).order('created_at',{ascending:true});
+ if(error){$('msg').className='msg err';$('msg').textContent='تعذر تحميل البيانات: '+error.message;return}
+ const map=new Map();
+ (data||[]).forEach(v=>{const d=v.devices||{};const name=d.hospital_name||'جهة غير مسجلة';map.set(name,name)});
+ entities=[...map.keys()].sort((a,b)=>a.localeCompare(b,'ar'));
+ renderEntities();visits=data||[];
+}
+function renderEntities(){
+ const q=$('entitySearch').value.trim().toLowerCase();
+ const chosen=new Set([...document.querySelectorAll('#entities input:checked')].map(x=>x.value));
+ $('entities').innerHTML=entities.filter(x=>!q||x.toLowerCase().includes(q)).map(x=>'<label class="entity-item"><input type="checkbox" value="'+esc(x)+'" '+(chosen.has(x)?'checked':'')+'><span>'+esc(x)+'</span></label>').join('')||'<div class="muted">لا توجد جهات.</div>';
+}
+$('entitySearch').oninput=renderEntities;
+$('allBtn').onclick=()=>{const boxes=[...document.querySelectorAll('#entities input')];const should=boxes.some(x=>!x.checked);boxes.forEach(x=>x.checked=should);$('allBtn').textContent=should?'إلغاء تحديد الكل':'تحديد الكل'};
+$('clear').onclick=()=>{$('from').value='';$('to').value='';document.querySelectorAll('#entities input').forEach(x=>x.checked=false);$('entitySearch').value='';$('allBtn').textContent='تحديد الكل';$('result').style.display='none';$('msg').textContent='';renderEntities()};
+$('run').onclick=runReport;
+function runReport(){
+ const from=$('from').value,to=$('to').value;
+ if(from&&to&&from>to){$('msg').className='msg err';$('msg').textContent='تاريخ البداية يجب أن يكون قبل تاريخ النهاية.';return}
+ const selected=[...document.querySelectorAll('#entities input:checked')].map(x=>x.value);
+ if(!from&&!to&&!selected.length){$('msg').className='msg err';$('msg').textContent='اختار فترة زمنية أو جهة واحدة على الأقل.';return}
+ const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
+ const previous=new Map();const calculated=[];
+ for(const v of ordered){
+  const d=v.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=d.serial_number||'—',key=v.device_id;
+  const cur=Number(v.total_count);const prev=previous.has(key)?Number(previous.get(key)):null;
+  previous.set(key,cur);
+  const inDate=(!from||v.visit_date>=from)&&(!to||v.visit_date<=to);
+  const inHospital=!selected.length||selected.includes(hospital);
+  if(inDate&&inHospital&&Number.isFinite(cur)){const delta=prev==null?null:cur-prev;calculated.push({...v,hospital,serial,engineer_name:(v.engineers||{}).name||'—',prev,delta:delta==null?null:(delta>0?delta:0)});}
+ }
+ const usable=calculated.filter(x=>x.delta!=null);
+ const total=usable.reduce((n,x)=>n+x.delta,0);
+ const hs=new Map();usable.forEach(x=>{if(!hs.has(x.hospital))hs.set(x.hospital,{devices:new Set(),visits:0,samples:0});const h=hs.get(x.hospital);h.devices.add(x.device_id);h.visits++;h.samples+=x.delta});
+ $('totalSamples').textContent=total.toLocaleString('en-US');$('totalHospitals').textContent=hs.size.toLocaleString('en-US');$('totalDevices').textContent=new Set(usable.map(x=>x.device_id)).size.toLocaleString('en-US');$('totalVisits').textContent=usable.length.toLocaleString('en-US');
+ $('summaryBody').innerHTML=[...hs.entries()].sort((a,b)=>b[1].samples-a[1].samples).map(([h,x])=>'<tr><td style="text-align:right;font-weight:700">'+esc(h)+'</td><td>'+x.devices.size+'</td><td>'+x.visits+'</td><td><b>'+x.samples.toLocaleString('en-US')+'</b></td></tr>').join('')||'<tr><td colspan="4"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
+ $('detailBody').innerHTML=calculated.sort((a,b)=>String(b.visit_date).localeCompare(String(a.visit_date))).map(x=>'<tr><td>'+esc(x.visit_date||'—')+'</td><td style="text-align:right">'+esc(x.hospital)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.prev==null?'—':x.prev)+'</td><td>'+esc(x.total_count)+'</td><td><b>'+esc(x.delta==null?'—':x.delta)+'</b></td><td>'+esc(x.engineer_name)+'</td></tr>').join('')||'<tr><td colspan="7"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
+ $('result').style.display='block';$('msg').className='msg ok';$('msg').textContent=usable.length?('✓ تم حساب التقرير من '+usable.length+' زيارة محتسبة.'):'لا توجد زيارات لها قراءة سابقة يمكن حساب العينات منها.';
+}
+</script></body></html>
