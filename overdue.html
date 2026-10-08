@@ -1,15 +1,20 @@
-<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>Celltac G PPM — متابعة الأجهزة المتأخرة</title><link rel="stylesheet" href="assets/style.css?v=20260923-overdue3"><style>
-.overdue-summary{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.summary-box{flex:1;min-width:150px;background:#f7f9fb;border-radius:12px;padding:12px;text-align:center}.summary-box b{display:block;font-size:24px;margin-top:4px}.overdue-filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.overdue-table{width:100%;min-width:790px;border-collapse:collapse;table-layout:fixed}.overdue-table th,.overdue-table td{padding:7px 5px;border-bottom:1px solid #e8edf1;text-align:center;vertical-align:middle;font-size:9.5px;line-height:1.25}.overdue-table th{background:#f7f9fb;font-weight:800;position:sticky;top:0;z-index:1}.overdue-table th:nth-child(1),.overdue-table td:nth-child(1){width:72px}.overdue-table th:nth-child(2),.overdue-table td:nth-child(2){width:190px;text-align:right}.overdue-table th:nth-child(3),.overdue-table td:nth-child(3){width:75px}.overdue-table th:nth-child(4),.overdue-table td:nth-child(4){width:105px}.overdue-table th:nth-child(5),.overdue-table td:nth-child(5){width:90px}.overdue-table th:nth-child(6),.overdue-table td:nth-child(6){width:82px}.overdue-table th:nth-child(7),.overdue-table td:nth-child(7){width:90px}.overdue-table th:nth-child(8),.overdue-table td:nth-child(8){width:95px}.overdue-table td:nth-child(2){white-space:normal;overflow-wrap:anywhere}.overdue-badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap}.overdue-badge.normal{background:#fff7ed;color:#b45309}.overdue-badge.urgent{background:#fef2f2;color:#b91c1c}.overdue-badge.critical{background:#fce7f3;color:#9d174d}.overdue-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.overdue-actions .btn{font-size:9px;padding:5px 6px;white-space:nowrap}.overdue-empty{padding:20px;text-align:center;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1}.overdue-count{font-size:28px;font-weight:900}.overdue-help{margin-top:5px;font-size:12px;color:#687386}@media(max-width:700px){.overdue-filters{grid-template-columns:1fr}.overdue-table{min-width:790px}.overdue-table th,.overdue-table td{font-size:9px;padding:6px 4px}.overdue-actions .btn{font-size:8.5px;padding:4px 5px}}
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>Celltac G PPM — متابعة الأجهزة المتأخرة</title><link rel="stylesheet" href="assets/style.css?v=20261008-overdue4"><style>
+.overdue-summary{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.summary-box{flex:1;min-width:150px;background:#f7f9fb;border-radius:12px;padding:12px;text-align:center;cursor:default;transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}.summary-box b{display:block;font-size:24px;margin-top:4px}.summary-box.selectable{cursor:pointer;border:2px solid transparent}.summary-box.selectable:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(15,23,42,.08)}.summary-box.selectable.active{border-color:#0f766e;background:#eefbf8;box-shadow:0 0 0 2px rgba(15,118,110,.08)}.summary-box .small-hint{display:block;margin-top:5px;font-size:10px;color:#64748b}.overdue-filters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.overdue-table{width:100%;min-width:790px;border-collapse:collapse;table-layout:fixed}.overdue-table th,.overdue-table td{padding:7px 5px;border-bottom:1px solid #e8edf1;text-align:center;vertical-align:middle;font-size:9.5px;line-height:1.25}.overdue-table th{background:#f7f9fb;font-weight:800;position:sticky;top:0;z-index:1}.overdue-table th:nth-child(1),.overdue-table td:nth-child(1){width:72px}.overdue-table th:nth-child(2),.overdue-table td:nth-child(2){width:190px;text-align:right}.overdue-table th:nth-child(3),.overdue-table td:nth-child(3){width:75px}.overdue-table th:nth-child(4),.overdue-table td:nth-child(4){width:105px}.overdue-table th:nth-child(5),.overdue-table td:nth-child(5){width:90px}.overdue-table th:nth-child(6),.overdue-table td:nth-child(6){width:82px}.overdue-table th:nth-child(7),.overdue-table td:nth-child(7){width:90px}.overdue-table th:nth-child(8),.overdue-table td:nth-child(8){width:95px}.overdue-table td:nth-child(2){white-space:normal;overflow-wrap:anywhere}.overdue-badge{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap}.overdue-badge.normal{background:#fff7ed;color:#b45309}.overdue-badge.urgent{background:#fef2f2;color:#b91c1c}.overdue-badge.critical{background:#fce7f3;color:#9d174d}.overdue-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}.overdue-actions .btn{font-size:9px;padding:5px 6px;white-space:nowrap}.overdue-empty{padding:20px;text-align:center;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1}.overdue-count{font-size:28px;font-weight:900}.overdue-help{margin-top:5px;font-size:12px;color:#687386}@media(max-width:700px){.overdue-filters{grid-template-columns:1fr}.overdue-table{min-width:790px}.overdue-table th,.overdue-table td{font-size:9px;padding:6px 4px}.overdue-actions .btn{font-size:8.5px;padding:4px 5px}}
 </style></head><body><header class="header"><div class="brand">Celltac G PPM — متابعة الأجهزة المتأخرة</div><div class="userbar"><a class="btn btn-light" href="manager.html">📊 لوحة المدير</a><span id="who"></span><button class="btn btn-light" onclick="logout()">خروج</button></div></header><div class="container">
-<div class="card"><div class="toolbar"><div><h2>⏰ متابعة الأجهزة المتأخرة</h2><div class="small">الأجهزة التي مرّ على آخر زيارة لها 30 يومًا أو أكثر، أو لم تتم زيارتها رغم مرور 30 يومًا على التركيب.</div></div><div style="text-align:center"><b id="overdueCount" class="overdue-count">0</b><div class="small">إجمالي المتابعة</div></div></div>
-<div class="overdue-summary"><div class="summary-box">🆕 بدون أي زيارة<b id="neverCount">0</b></div><div class="summary-box">📅 آخر زيارة 30+ يوم<b id="oldCount">0</b></div><div class="summary-box">🔴 متأخرة 60+ يوم<b id="urgentCount">0</b></div><div class="summary-box">⚠️ متأخرة 90+ يوم<b id="criticalCount">0</b></div></div>
+<div class="card"><div class="toolbar"><div><h2>⏰ متابعة الأجهزة المتأخرة</h2><div class="small">اضغط على فئة التأخير لعرض جدول هذه الفئة فقط. الفلاتر تعمل داخل الفئة المختارة.</div></div><div style="text-align:center"><b id="overdueCount" class="overdue-count">0</b><div class="small" id="selectedLabel">اختر فئة</div></div></div>
+<div class="overdue-summary">
+<div class="summary-box">🆕 بدون أي زيارة<b id="neverCount">0</b><span class="small-hint">للعرض اختر إحدى فئات التأخير</span></div>
+<div class="summary-box selectable" data-bucket="30" onclick="selectBucket(30)">📅 آخر زيارة 30+ يوم<b id="oldCount">0</b><span class="small-hint">اضغط لعرض 30+ فقط</span></div>
+<div class="summary-box selectable" data-bucket="60" onclick="selectBucket(60)">🔴 متأخرة 60+ يوم<b id="urgentCount">0</b><span class="small-hint">اضغط لعرض 60+ فقط</span></div>
+<div class="summary-box selectable" data-bucket="90" onclick="selectBucket(90)">⚠️ متأخرة 90+ يوم<b id="criticalCount">0</b><span class="small-hint">اضغط لعرض 90+ فقط</span></div>
+</div>
 <div class="overdue-filters"><div><label>📍 المحافظة</label><select id="govFilter"><option value="">كل المحافظات</option></select></div><div><label>🔎 بحث</label><input id="searchFilter" placeholder="Serial أو اسم الجهة أو المهندس"></div></div>
 <div id="msg" class="msg"></div></div>
-<div class="card" style="margin-top:14px"><div class="toolbar"><div><h2>📋 قائمة الأجهزة المطلوب متابعتها</h2><div class="overdue-help">مرتبة من الأكثر تأخرًا إلى الأقل.</div></div></div>
-<div class="table-wrap"><table class="overdue-table"><thead><tr><th>Serial</th><th>الجهة</th><th>المحافظة</th><th>آخر زيارة</th><th>مدة التأخير</th><th>المهندس</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody id="overdueList"></tbody></table></div></div>
+<div class="card" style="margin-top:14px"><div class="toolbar"><div><h2 id="tableTitle">📋 جدول الأجهزة</h2><div class="overdue-help" id="tableHelp">اختر +30 أو +60 أو +90 من الأعلى لعرض الفئة المطلوبة فقط.</div></div></div>
+<div class="table-wrap"><table class="overdue-table"><thead><tr><th>Serial</th><th>الجهة</th><th>المحافظة</th><th>آخر زيارة</th><th>مدة التأخير</th><th>المهندس</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody id="overdueList"><tr><td colspan="8"><div class="overdue-empty">👆 اختر فئة +30 أو +60 أو +90 لعرض جدولها فقط.</div></td></tr></tbody></table></div></div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js?v=overdue3"></script><script src="js/common.js?v=overdue2"></script><script>
-let profile,rows=[],allDevices=[],filteredRows=[];const $=id=>document.getElementById(id);
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js?v=overdue4"></script><script src="js/common.js?v=overdue4"></script><script>
+let profile,rows=[],allDevices=[],filteredRows=[],selectedBucket=null;const $=id=>document.getElementById(id);
 (async()=>{profile=await requireRole('manager');if(!profile)return;$('who').textContent=profile.full_name;await load()})();
 async function load(){
  const [{data,error},{data:devs,error:devErr}]=await Promise.all([
@@ -21,16 +26,50 @@ async function load(){
  const latest={};
  (data||[]).forEach(v=>{const d=v.devices||{};if(d.serial_number&&!latest[d.serial_number])latest[d.serial_number]={...v,serial_number:d.serial_number,hospital_name:d.hospital_name||'',hospital_type:d.hospital_type||'',governorate:d.governorate||'',installation_date:d.installation_date||'',engineer_name:(v.engineers||{}).name||''}});
  const today=new Date();today.setHours(0,0,0,0);
- const visited=Object.values(latest).map(r=>{const d=r.visit_date?new Date(r.visit_date+'T00:00:00'):null;return{...r,days:d?Math.floor((today-d)/86400000):0,kind:'old'}}).filter(r=>r.visit_date&&r.days>=30);
- const never=allDevices.filter(d=>!latest[d.serial_number]).map(d=>{const x=d.installation_date?new Date(d.installation_date+'T00:00:00'):null;return{...d,days:x?Math.floor((today-x)/86400000):0,kind:'never',engineer_name:''}}).filter(d=>d.installation_date&&d.days>=30);
+ const visited=Object.values(latest).map(r=>{const d=r.visit_date?new Date(r.visit_date+'T00:00:00'):null;return{...r,days:d?Math.max(0,Math.floor((today-d)/86400000)):0,kind:'old'}}).filter(r=>r.visit_date&&r.days>=30);
+ const never=allDevices.filter(d=>!latest[d.serial_number]).map(d=>{const x=d.installation_date?new Date(d.installation_date+'T00:00:00'):null;return{...d,days:x?Math.max(0,Math.floor((today-x)/86400000)):0,kind:'never',engineer_name:''}}).filter(d=>d.installation_date&&d.days>=30);
  rows=[...visited,...never].sort((a,b)=>b.days-a.days);
- fillGovernors();updateCounts();applyFilters()
+ fillGovernors();updateCounts();render();
 }
 function fillGovernors(){const govs=[...new Set(rows.map(r=>String(r.governorate||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar'));$('govFilter').innerHTML='<option value="">كل المحافظات</option>'+govs.map(g=>'<option value="'+esc(g)+'">'+esc(g)+'</option>').join('')}
-function updateCounts(){const a=filteredRows.length?filteredRows:rows;$('overdueCount').textContent=filteredRows.length;$('neverCount').textContent=rows.filter(r=>r.kind==='never').length;$('oldCount').textContent=rows.filter(r=>r.kind==='old').length;$('urgentCount').textContent=rows.filter(r=>r.days>=60).length;$('criticalCount').textContent=rows.filter(r=>r.days>=90).length}
-function applyFilters(){const g=$('govFilter').value.trim().toLowerCase(),q=$('searchFilter').value.trim().toLowerCase();filteredRows=rows.filter(r=>(!g||String(r.governorate||'').toLowerCase()===g)&&(!q||[r.serial_number,r.hospital_name,r.engineer_name].some(x=>String(x||'').toLowerCase().includes(q))));$('overdueCount').textContent=filteredRows.length;render()}
-function render(){if(!filteredRows.length){$('overdueList').innerHTML='<tr><td colspan="8"><div class="overdue-empty">✅ لا توجد حاليًا أجهزة تحتاج متابعة حسب الاختيارات الحالية.</div></td></tr>';return}
- $('overdueList').innerHTML=filteredRows.map(r=>{const level=r.days>=90?'critical':r.days>=60?'urgent':'normal';const label=r.kind==='never'?'🆕 لم تتم زيارة':r.days>=90?'⚠ متابعة عاجلة':r.days>=60?'🔴 متابعة مهمة':'🟠 يحتاج متابعة';const date=r.kind==='never'?'لم تتم أي زيارة':r.visit_date;const duration=r.kind==='never'?'منذ التركيب: '+r.days+' يوم':r.days+' يوم';return '<tr><td><b>'+esc(r.serial_number)+'</b></td><td>'+esc(r.hospital_name||'جهة غير مسجلة')+'</td><td>'+esc(r.governorate||'—')+'</td><td>'+esc(date)+'</td><td><b>'+esc(duration)+'</b></td><td>'+esc(r.kind==='never'?'—':(r.engineer_name||'—'))+'</td><td><span class="overdue-badge '+level+'">'+label+'</span></td><td><div class="overdue-actions"><button class="btn btn-primary" onclick="openInManager(\''+esc(r.serial_number)+'\')">📋 سجل الزيارات</button><button class="btn" onclick="copySerial(\''+esc(r.serial_number)+'\')">📌 نسخ</button></div></td></tr>'}).join('')
+function updateCounts(){
+ $('neverCount').textContent=rows.filter(r=>r.kind==='never').length;
+ $('oldCount').textContent=rows.filter(r=>r.kind==='old'&&r.days>=30).length;
+ $('urgentCount').textContent=rows.filter(r=>r.kind==='old'&&r.days>=60).length;
+ $('criticalCount').textContent=rows.filter(r=>r.kind==='old'&&r.days>=90).length;
+ updateSelectedCount();
+}
+function selectBucket(bucket){
+ selectedBucket=bucket;
+ document.querySelectorAll('.summary-box.selectable').forEach(el=>el.classList.toggle('active',Number(el.dataset.bucket)===bucket));
+ const label=bucket===30?'+30 يوم':bucket===60?'+60 يوم':'+90 يوم';
+ $('selectedLabel').textContent='الفئة: '+label;
+ $('tableTitle').textContent='📋 جدول الأجهزة '+label;
+ $('tableHelp').textContent='يظهر هنا فقط الأجهزة المطابقة لفئة '+label+'، مع تطبيق الفلاتر الحالية.';
+ applyFilters();
+}
+function updateSelectedCount(){
+ if(selectedBucket===null){$('overdueCount').textContent='0';return}
+ const g=$('govFilter').value.trim().toLowerCase(),q=$('searchFilter').value.trim().toLowerCase();
+ const base=rows.filter(r=>r.kind==='old'&&r.days>=selectedBucket);
+ const count=base.filter(r=>(!g||String(r.governorate||'').toLowerCase()===g)&&(!q||[r.serial_number,r.hospital_name,r.engineer_name].some(x=>String(x||'').toLowerCase().includes(q)))).length;
+ $('overdueCount').textContent=count;
+}
+function applyFilters(){
+ if(selectedBucket===null){filteredRows=[];render();updateSelectedCount();return}
+ const g=$('govFilter').value.trim().toLowerCase(),q=$('searchFilter').value.trim().toLowerCase();
+ filteredRows=rows.filter(r=>r.kind==='old'&&r.days>=selectedBucket)
+   .filter(r=>(!g||String(r.governorate||'').toLowerCase()===g)&&(!q||[r.serial_number,r.hospital_name,r.engineer_name].some(x=>String(x||'').toLowerCase().includes(q))));
+ $('overdueCount').textContent=filteredRows.length;render();
+}
+function render(){
+ if(!selectedBucket){$('overdueList').innerHTML='<tr><td colspan="8"><div class="overdue-empty">👆 اختر فئة +30 أو +60 أو +90 لعرض جدولها فقط.</div></td></tr>';return}
+ if(!filteredRows.length){$('overdueList').innerHTML='<tr><td colspan="8"><div class="overdue-empty">✅ لا توجد حاليًا أجهزة في الفئة المختارة حسب الاختيارات الحالية.</div></td></tr>';return}
+ $('overdueList').innerHTML=filteredRows.map(r=>{
+  const level=r.days>=90?'critical':r.days>=60?'urgent':'normal';
+  const label=r.days>=90?'⚠ متابعة عاجلة':r.days>=60?'🔴 متابعة مهمة':'🟠 يحتاج متابعة';
+  return '<tr><td><b>'+esc(r.serial_number)+'</b></td><td>'+esc(r.hospital_name||'جهة غير مسجلة')+'</td><td>'+esc(r.governorate||'—')+'</td><td>'+esc(r.visit_date||'—')+'</td><td><b>'+esc(String(r.days)+' يوم')+'</b></td><td>'+esc(r.engineer_name||'—')+'</td><td><span class="overdue-badge '+level+'">'+label+'</span></td><td><div class="overdue-actions"><button class="btn btn-primary" onclick="openInManager(\\''+esc(r.serial_number)+'\\')">📋 سجل الزيارات</button><button class="btn" onclick="copySerial(\\''+esc(r.serial_number)+'\\')">📌 نسخ</button></div></td></tr>'
+ }).join('')
 }
 function openInManager(serial){location.href='manager.html#serial='+encodeURIComponent(serial)}
 async function copySerial(serial){try{await navigator.clipboard?.writeText(serial)}catch(e){}}
