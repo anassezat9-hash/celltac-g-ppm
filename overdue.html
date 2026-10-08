@@ -63,13 +63,21 @@ function applyFilters(){
  $('overdueCount').textContent=filteredRows.length;render();
 }
 function render(){
- if(!selectedBucket){$('overdueList').innerHTML='<tr><td colspan="8"><div class="overdue-empty">👆 اختر فئة +30 أو +60 أو +90 لعرض جدولها فقط.</div></td></tr>';return}
- if(!filteredRows.length){$('overdueList').innerHTML='<tr><td colspan="8"><div class="overdue-empty">✅ لا توجد حاليًا أجهزة في الفئة المختارة حسب الاختيارات الحالية.</div></td></tr>';return}
+ if(!selectedBucket){
+  $('overdueList').innerHTML='<tr><td colspan="8"><div class="overdue-empty">👆 اختر فئة +30 أو +60 أو +90 لعرض جدولها فقط.</div></td></tr>';
+  return;
+ }
+ if(!filteredRows.length){
+  $('overdueList').innerHTML='<tr><td colspan="8"><div class="overdue-empty">✅ لا توجد حاليًا أجهزة في الفئة المختارة حسب الاختيارات الحالية.</div></td></tr>';
+  return;
+ }
  $('overdueList').innerHTML=filteredRows.map(r=>{
   const level=r.days>=90?'critical':r.days>=60?'urgent':'normal';
   const label=r.days>=90?'⚠ متابعة عاجلة':r.days>=60?'🔴 متابعة مهمة':'🟠 يحتاج متابعة';
-  return '<tr><td><b>'+esc(r.serial_number)+'</b></td><td>'+esc(r.hospital_name||'جهة غير مسجلة')+'</td><td>'+esc(r.governorate||'—')+'</td><td>'+esc(r.visit_date||'—')+'</td><td><b>'+esc(String(r.days)+' يوم')+'</b></td><td>'+esc(r.engineer_name||'—')+'</td><td><span class="overdue-badge '+level+'">'+label+'</span></td><td><div class="overdue-actions"><button class="btn btn-primary" onclick="openInManager(\\''+esc(r.serial_number)+'\\')">📋 سجل الزيارات</button><button class="btn" onclick="copySerial(\\''+esc(r.serial_number)+'\\')">📌 نسخ</button></div></td></tr>'
- }).join('')
+  return '<tr><td><b>'+esc(r.serial_number)+'</b></td><td>'+esc(r.hospital_name||'جهة غير مسجلة')+'</td><td>'+esc(r.governorate||'—')+'</td><td>'+esc(r.visit_date||'—')+'</td><td><b>'+esc(String(r.days)+' يوم')+'</b></td><td>'+esc(r.engineer_name||'—')+'</td><td><span class="overdue-badge '+level+'">'+label+'</span></td><td><div class="overdue-actions"><button class="btn btn-primary" data-open-serial="'+esc(r.serial_number)+'">📋 سجل الزيارات</button><button class="btn" data-copy-serial="'+esc(r.serial_number)+'">📌 نسخ</button></div></td></tr>';
+ }).join('');
+ $('overdueList').querySelectorAll('[data-open-serial]').forEach(btn=>btn.onclick=()=>openInManager(btn.getAttribute('data-open-serial')));
+ $('overdueList').querySelectorAll('[data-copy-serial]').forEach(btn=>btn.onclick=()=>copySerial(btn.getAttribute('data-copy-serial')));
 }
 function openInManager(serial){location.href='manager.html#serial='+encodeURIComponent(serial)}
 async function copySerial(serial){try{await navigator.clipboard?.writeText(serial)}catch(e){}}
