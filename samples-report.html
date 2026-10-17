@@ -34,7 +34,7 @@ function runReport(){
  const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
  const previous=new Map();const calculated=[];
  for(const v of ordered){
-  const d=v.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=d.serial_number||'—',key=v.device_id;
+  const d=v.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=d.serial_number||'—',key=v.device_id||('serial:'+serial);
   const cur=Number(v.total_count);const prev=previous.has(key)?Number(previous.get(key)):null;
   previous.set(key,cur);
   const inDate=(!from||v.visit_date>=from)&&(!to||v.visit_date<=to);
@@ -43,7 +43,7 @@ function runReport(){
  }
  const usable=calculated.filter(x=>x.delta!=null);
  const total=usable.reduce((n,x)=>n+x.delta,0);
- const hs=new Map();usable.forEach(x=>{if(!hs.has(x.hospital))hs.set(x.hospital,{devices:new Set(),visits:0,samples:0});const h=hs.get(x.hospital);h.devices.add(x.device_id);h.visits++;h.samples+=x.delta});
+ const hs=new Map();usable.forEach(x=>{if(!hs.has(x.hospital))hs.set(x.hospital,{devices:new Set(),visits:0,samples:0});const h=hs.get(x.hospital);h.devices.add(x.device_id||('serial:'+x.serial));h.visits++;h.samples+=x.delta});
  $('totalSamples').textContent=total.toLocaleString('en-US');$('totalHospitals').textContent=hs.size.toLocaleString('en-US');$('totalDevices').textContent=new Set(usable.map(x=>x.device_id)).size.toLocaleString('en-US');$('totalVisits').textContent=usable.length.toLocaleString('en-US');
  $('summaryBody').innerHTML=[...hs.entries()].sort((a,b)=>b[1].samples-a[1].samples).map(([h,x])=>'<tr><td style="text-align:right;font-weight:700">'+esc(h)+'</td><td>'+x.devices.size+'</td><td>'+x.visits+'</td><td><b>'+x.samples.toLocaleString('en-US')+'</b></td></tr>').join('')||'<tr><td colspan="4"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
  $('detailBody').innerHTML=calculated.sort((a,b)=>String(b.visit_date).localeCompare(String(a.visit_date))).map(x=>'<tr><td>'+esc(x.visit_date||'—')+'</td><td style="text-align:right">'+esc(x.hospital)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.prev==null?'—':x.prev)+'</td><td>'+esc(x.total_count)+'</td><td><b>'+esc(x.delta==null?'—':x.delta)+'</b></td><td>'+esc(x.engineer_name)+'</td></tr>').join('')||'<tr><td colspan="7"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
