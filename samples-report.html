@@ -52,10 +52,10 @@ function runReport(){
  const usable=calculated.filter(x=>x.delta!=null);
  const total=usable.reduce((n,x)=>n+x.delta,0);
  // Count every selected serial in the device totals, including first visits with no prior reading.
- const hs=new Map();calculated.forEach(x=>{if(!hs.has(x.entityKey))hs.set(x.entityKey,{label:x.entityLabel,devices:new Set(),visits:0,samples:0});const h=hs.get(x.entityKey);h.devices.add(x.deviceKey);if(x.delta!=null){h.visits++;h.samples+=x.delta}});
- $('totalSamples').textContent=total.toLocaleString('en-US');$('totalHospitals').textContent=hs.size.toLocaleString('en-US');$('totalDevices').textContent=new Set(calculated.map(x=>x.deviceKey)).size.toLocaleString('en-US');$('totalVisits').textContent=usable.length.toLocaleString('en-US');
+ const hs=new Map();calculated.forEach(x=>{if(!hs.has(x.entityKey))hs.set(x.entityKey,{label:x.entityLabel,devices:new Set(),visits:0,samples:0});const h=hs.get(x.entityKey);h.devices.add(x.deviceKey);h.visits++;if(x.delta!=null)h.samples+=x.delta});
+ $('totalSamples').textContent=total.toLocaleString('en-US');$('totalHospitals').textContent=hs.size.toLocaleString('en-US');$('totalDevices').textContent=new Set(calculated.map(x=>x.deviceKey)).size.toLocaleString('en-US');$('totalVisits').textContent=calculated.length.toLocaleString('en-US');
  $('summaryBody').innerHTML=[...hs.entries()].sort((a,b)=>b[1].samples-a[1].samples).map(([key,x])=>'<tr><td style="text-align:right;font-weight:700">'+esc(x.label)+'</td><td>'+x.devices.size+'</td><td>'+x.visits+'</td><td><b>'+x.samples.toLocaleString('en-US')+'</b></td></tr>').join('')||'<tr><td colspan="4"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
  $('detailBody').innerHTML=calculated.sort((a,b)=>String(b.visit_date).localeCompare(String(a.visit_date))).map(x=>'<tr><td>'+esc(x.visit_date||'—')+'</td><td style="text-align:right">'+esc(x.entityLabel)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.prev==null?'—':x.prev)+'</td><td>'+esc(x.total_count)+'</td><td><b>'+esc(x.delta==null?'—':x.delta)+'</b></td><td>'+esc(x.engineer_name)+'</td></tr>').join('')||'<tr><td colspan="7"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
- $('result').style.display='block';$('msg').className='msg ok';$('msg').textContent=usable.length?('✓ تم حساب التقرير من '+usable.length+' زيارة محتسبة.'):'لا توجد زيارات لها قراءة سابقة يمكن حساب العينات منها.';
+ $('result').style.display='block';$('msg').className='msg ok';$('msg').textContent=usable.length?('✓ إجمالي الزيارات المعروضة: '+calculated.length+'، والزيارات التي أمكن حساب العينات منها: '+usable.length+'.'):'لا توجد زيارات لها قراءة سابقة يمكن حساب العينات منها.';
 }
 </script></body></html>
