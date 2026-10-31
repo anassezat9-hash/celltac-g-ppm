@@ -25,7 +25,7 @@ function cairoTodayISO(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'
 function updateLateVisitWarning(){const age=ageOfVisitDate(date.value);const box=$('lateVisitWarning');if(box)box.style.display=age!==null&&age>7?'block':'none'}
 function ageOfVisitDate(dateValue){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateValue||''));if(!m)return null;const visit=Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3]));const today=cairoTodayISO().split('-').map(Number);const now=Date.UTC(today[0],today[1]-1,today[2]);return Math.floor((now-visit)/86400000)}
 date.addEventListener('change',updateLateVisitWarning);updateLateVisitWarning();
-function resetVisitForm(){serial.value='';count.value='';parts.value='';reportFile.value='';info.textContent='';device=null}
+function resetVisitForm(){serial.value='';count.value='';parts.value='';reportFile.value='';info.textContent='';device=null;date.value=cairoTodayISO();updateLateVisitWarning()}
 async function uploadVisitReport(file,visitId){if(!file)return{path:null,error:null};if(!file.type||!file.type.startsWith('image/'))return{path:null,error:{message:'يسمح برفع الصور فقط.'}};const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';const path=profile.id+'/'+visitId+'/'+device.id+'.'+ext;const{error}=await sb.storage.from('maintenance-reports').upload(path,file,{upsert:false,contentType:file.type});return{path,error}}
 $('save').onclick=async()=>{
  msg.className='msg';msg.textContent='';reportMsg.className='msg';reportMsg.textContent='';
