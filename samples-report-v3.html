@@ -5,7 +5,7 @@ body{background:#f5f8fa}.samples-wrap{max-width:1400px;margin:0 auto}.back{margi
 <div id="result" style="display:none"><div class="summary"><div class="sum"><span>إجمالي العينات</span><b id="totalSamples">0</b></div><div class="sum"><span>عدد الجهات/الأجهزة</span><b id="totalHospitals">0</b></div><div class="sum"><span>عدد الأجهزة</span><b id="totalDevices">0</b></div><div class="sum"><span>عدد الزيارات المحتسبة</span><b id="totalVisits">0</b></div></div>
 <div class="card"><h2>📋 ملخص العينات حسب الجهة</h2><div class="table-wrap"><table class="report-table"><thead><tr><th>الجهة</th><th>عدد الأجهزة</th><th>عدد الزيارات</th><th>إجمالي العينات</th></tr></thead><tbody id="summaryBody"></tbody></table></div></div>
 <div class="card"><h2>📑 التفاصيل</h2><div class="table-wrap"><table class="report-table"><thead><tr><th>التاريخ</th><th>الجهة</th><th>Serial</th><th>القراءة السابقة</th><th>Total Count</th><th>العينات</th><th>المهندس</th></tr></thead><tbody id="detailBody"></tbody></table></div></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js?v=readingconflict1"></script><script src="js/common.js?v=readingconflict1"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js?v=readingconflict2"></script><script src="js/common.js?v=readingconflict1"></script><script>
 let profile,visits=[],entities=[],conflicts=[];
 const $=id=>document.getElementById(id);
 (async()=>{profile=await requireRole('manager');if(!profile)return;$('who').textContent=profile.full_name;await loadData();})();
