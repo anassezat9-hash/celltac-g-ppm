@@ -6,12 +6,17 @@ body{background:#f5f8fa}.samples-wrap{max-width:1400px;margin:0 auto}.back{margi
 <div class="card"><h2>📋 ملخص العينات حسب الجهة</h2><div class="table-wrap"><table class="report-table"><thead><tr><th>الجهة</th><th>عدد الأجهزة</th><th>عدد الزيارات</th><th>إجمالي العينات</th></tr></thead><tbody id="summaryBody"></tbody></table></div></div>
 <div class="card"><h2>📑 التفاصيل</h2><div class="table-wrap"><table class="report-table"><thead><tr><th>التاريخ</th><th>الجهة</th><th>Serial</th><th>القراءة السابقة</th><th>Total Count</th><th>العينات</th><th>المهندس</th></tr></thead><tbody id="detailBody"></tbody></table></div></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js?v=20261017-serialfix4"></script><script src="js/common.js?v=20261017-serialfix4"></script><script>
-let profile,visits=[],entities=[];
+let profile,visits=[],entities=[],conflicts=[];
 const $=id=>document.getElementById(id);
 (async()=>{profile=await requireRole('manager');if(!profile)return;$('who').textContent=profile.full_name;await loadData();})();
 async function loadData(){
  const {data,error}=await sb.from('visits').select('id,device_id,engineer_id,visit_date,total_count,created_at,devices:device_id(serial_number,hospital_name),engineers:engineer_id(name)').order('visit_date',{ascending:true}).order('created_at',{ascending:true});
  if(error){$('msg').className='msg err';$('msg').textContent='تعذر تحميل البيانات: '+error.message;return}
+ const sync=await sb.rpc('sync_visit_reading_conflicts');
+ if(sync.error){$('msg').className='msg err';$('msg').textContent='تعذر التحقق من تعارضات القراءات؛ تم إيقاف التقرير احتياطياً: '+sync.error.message;return}
+ const conflictResult=await sb.from('visit_reading_conflicts').select('id,device_id,serial_number,hospital_name,visit_date,previous_visit_date,current_total_count,previous_total_count,difference,status').eq('status','open');
+ if(conflictResult.error){$('msg').className='msg err';$('msg').textContent='تعذر تحميل حالة التعارضات؛ تم إيقاف التقرير احتياطياً: '+conflictResult.error.message;return}
+ conflicts=conflictResult.data||[];
  const map=new Map();
  (data||[]).forEach(v=>{
   const d=v.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=String(d.serial_number||'').trim()||'بدون Serial';
@@ -34,6 +39,13 @@ function runReport(){
  const from=$('from').value,to=$('to').value;
  if(from&&to&&from>to){$('msg').className='msg err';$('msg').textContent='تاريخ البداية يجب أن يكون قبل تاريخ النهاية.';return}
  const selected=[...document.querySelectorAll('#entities input:checked')].map(x=>x.value);
+ const blocked=conflicts.filter(x=>(!from||x.visit_date>=from)&&(!to||x.visit_date<=to)&&(!selected.length||selected.includes((x.hospital_name||'جهة غير مسجلة')+'|||'+(String(x.serial_number||'').trim()||'بدون Serial'))));
+ if(blocked.length){
+  $('result').style.display='none';
+  $('msg').className='msg err';
+  $('msg').innerHTML='<b>⛔ لا يمكن إصدار التقرير لوجود تعارضات غير محسومة:</b><div style="margin-top:9px">'+blocked.map(x=>'<div style="padding:9px;margin:6px 0;border:1px solid #fecaca;border-radius:9px;background:#fff7f7"><b>Serial '+esc(x.serial_number)+' — '+esc(x.hospital_name)+'</b><br>الزيارة: '+esc(x.visit_date)+' | القراءة السابقة: '+Number(x.previous_total_count).toLocaleString('en-US')+' | الحالية: '+Number(x.current_total_count).toLocaleString('en-US')+' | الفرق: <b style="color:#b42318">'+Number(x.difference).toLocaleString('en-US')+'</b></div>').join('')+'</div><div style="margin-top:8px">يجب على المدير مراجعة التعارض وإغلاقه بموافقة موثقة أو تصحيح القراءة أولاً.</div>';
+  return;
+ }
  if(!from&&!to&&!selected.length){$('msg').className='msg err';$('msg').textContent='اختار فترة زمنية أو جهة واحدة على الأقل.';return}
  const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
  const previous=new Map();const calculated=[];
@@ -47,7 +59,7 @@ function runReport(){
   previous.set(deviceKey,cur);
   const inDate=(!from||v.visit_date>=from)&&(!to||v.visit_date<=to);
   const inEntity=!selected.length||selected.includes(entityKey);
-  if(inDate&&inEntity&&Number.isFinite(cur)){const delta=prev==null?null:cur-prev;calculated.push({...v,hospital,serial,entityKey,entityLabel:hospital+' — Serial '+serial,deviceKey,engineer_name:(v.engineers||{}).name||'—',prev,delta:delta==null?null:(delta>0?delta:0)});}
+  if(inDate&&inEntity&&Number.isFinite(cur)){const delta=prev==null?null:cur-prev;calculated.push({...v,hospital,serial,entityKey,entityLabel:hospital+' — Serial '+serial,deviceKey,engineer_name:(v.engineers||{}).name||'—',prev,delta:delta});}
  }
  const usable=calculated.filter(x=>x.delta!=null);
  const total=usable.reduce((n,x)=>n+x.delta,0);
