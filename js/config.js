@@ -7,4 +7,3 @@ const mt=document.createElement('script');mt.src='js/manager-table-fix.js?v=3';d
 const nd=document.createElement('script');nd.src='js/native-download.js?v=1';document.head.appendChild(nd);
 const mf=document.createElement('script');mf.src='js/manager-fixes.js?v=2';document.head.appendChild(mf);
 const df=document.createElement('script');df.src='js/database-fixes.js?v=1';document.head.appendChild(df);
-const rc=document.createElement('script');rc.src='js/reading-conflicts.js?v=4';document.head.appendChild(rc);
