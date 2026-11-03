@@ -2,7 +2,7 @@
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   let tries=0;
   async function init(){
-    if(!window.sb || !document.getElementById('tbody')){if(++tries<40)setTimeout(init,300);return}
+    if(!window.sb || !document.querySelector('.container') || !document.querySelector('.kpis')){if(++tries<40)setTimeout(init,300);return}
     try{
       const {data:{user}}=await sb.auth.getUser(); if(!user)return;
       const {data:profile}=await sb.from('profiles').select('role,active').eq('id',user.id).single();
@@ -12,7 +12,7 @@
         card=document.createElement('section');card.id='readingConflictsCard';card.className='card';
         card.style.cssText='margin:0 0 16px;border-right:5px solid #b42318';
         card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2 style="margin:0 0 5px">⚠️ مراجعة تعارضات القراءات</h2><div class="small">القراءات الأقل من القراءة السابقة، مع سجل قرارات المدير.</div></div><button id="refreshReadingConflicts" class="btn">تحديث</button></div><div id="readingConflictsContent" style="margin-top:12px">جاري فحص القراءات...</div>';
-        const container=document.querySelector('.container');if(container)container.insertBefore(card,container.firstChild);
+        const kpis=document.querySelector('.kpis');if(kpis)kpis.insertAdjacentElement('afterend',card);
         document.getElementById('refreshReadingConflicts').onclick=load;
       }
       await load();
