@@ -14,7 +14,7 @@ async function loadData(){
  if(error){$('msg').className='msg err';$('msg').textContent='تعذر تحميل البيانات: '+error.message;return}
  const sync=await sb.rpc('sync_visit_reading_conflicts');
  if(sync.error){$('msg').className='msg err';$('msg').textContent='تعذر التحقق من تعارضات القراءات؛ تم إيقاف التقرير احتياطياً: '+sync.error.message;return}
- const conflictResult=await sb.from('visit_reading_conflicts').select('id,device_id,serial_number,hospital_name,visit_date,previous_visit_date,current_total_count,previous_total_count,difference,status').eq('status','open');
+ const conflictResult=await sb.from('visit_reading_conflicts').select('id,visit_id,device_id,serial_number,hospital_name,visit_date,previous_visit_date,current_total_count,previous_total_count,difference,status').in('status',['open','approved_closed']);
  if(conflictResult.error){$('msg').className='msg err';$('msg').textContent='تعذر تحميل حالة التعارضات؛ تم إيقاف التقرير احتياطياً: '+conflictResult.error.message;return}
  conflicts=conflictResult.data||[];
  const map=new Map();
@@ -39,7 +39,7 @@ function runReport(){
  const from=$('from').value,to=$('to').value;
  if(from&&to&&from>to){$('msg').className='msg err';$('msg').textContent='تاريخ البداية يجب أن يكون قبل تاريخ النهاية.';return}
  const selected=[...document.querySelectorAll('#entities input:checked')].map(x=>x.value);
- const blocked=conflicts.filter(x=>(!from||x.visit_date>=from)&&(!to||x.visit_date<=to)&&(!selected.length||selected.includes((x.hospital_name||'جهة غير مسجلة')+'|||'+(String(x.serial_number||'').trim()||'بدون Serial'))));
+ const blocked=conflicts.filter(x=>x.status==='open'&&(!from||x.visit_date>=from)&&(!to||x.visit_date<=to)&&(!selected.length||selected.includes((x.hospital_name||'جهة غير مسجلة')+'|||'+(String(x.serial_number||'').trim()||'بدون Serial'))));
  if(blocked.length){
   $('result').style.display='none';
   $('msg').className='msg err';
@@ -59,7 +59,7 @@ function runReport(){
   previous.set(deviceKey,cur);
   const inDate=(!from||v.visit_date>=from)&&(!to||v.visit_date<=to);
   const inEntity=!selected.length||selected.includes(entityKey);
-  if(inDate&&inEntity&&Number.isFinite(cur)){const delta=prev==null?null:cur-prev;calculated.push({...v,hospital,serial,entityKey,entityLabel:hospital+' — Serial '+serial,deviceKey,engineer_name:(v.engineers||{}).name||'—',prev,delta:delta});}
+  if(inDate&&inEntity&&Number.isFinite(cur)){const approvedException=conflicts.some(x=>x.status==='approved_closed'&&x.visit_id===v.id);const delta=prev==null?null:(approvedException?0:cur-prev);calculated.push({...v,hospital,serial,entityKey,entityLabel:hospital+' — Serial '+serial,deviceKey,engineer_name:(v.engineers||{}).name||'—',prev,delta,approvedException});}
  }
  const usable=calculated.filter(x=>x.delta!=null);
  const total=usable.reduce((n,x)=>n+x.delta,0);
@@ -67,7 +67,7 @@ function runReport(){
  const hs=new Map();calculated.forEach(x=>{if(!hs.has(x.entityKey))hs.set(x.entityKey,{label:x.entityLabel,devices:new Set(),visits:0,samples:0});const h=hs.get(x.entityKey);h.devices.add(x.deviceKey);h.visits++;if(x.delta!=null)h.samples+=x.delta});
  $('totalSamples').textContent=total.toLocaleString('en-US');$('totalHospitals').textContent=hs.size.toLocaleString('en-US');$('totalDevices').textContent=new Set(calculated.map(x=>x.deviceKey)).size.toLocaleString('en-US');$('totalVisits').textContent=calculated.length.toLocaleString('en-US');
  $('summaryBody').innerHTML=[...hs.entries()].sort((a,b)=>b[1].samples-a[1].samples).map(([key,x])=>'<tr><td style="text-align:right;font-weight:700">'+esc(x.label)+'</td><td>'+x.devices.size+'</td><td>'+x.visits+'</td><td><b>'+x.samples.toLocaleString('en-US')+'</b></td></tr>').join('')||'<tr><td colspan="4"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
- $('detailBody').innerHTML=calculated.sort((a,b)=>String(b.visit_date).localeCompare(String(a.visit_date))).map(x=>'<tr><td>'+esc(x.visit_date||'—')+'</td><td style="text-align:right">'+esc(x.entityLabel)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.prev==null?'—':x.prev)+'</td><td>'+esc(x.total_count)+'</td><td><b>'+esc(x.delta==null?'—':x.delta)+'</b></td><td>'+esc(x.engineer_name)+'</td></tr>').join('')||'<tr><td colspan="7"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
+ $('detailBody').innerHTML=calculated.sort((a,b)=>String(b.visit_date).localeCompare(String(a.visit_date))).map(x=>'<tr><td>'+esc(x.visit_date||'—')+'</td><td style="text-align:right">'+esc(x.entityLabel)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.prev==null?'—':x.prev)+'</td><td>'+esc(x.total_count)+'</td><td><b>'+esc(x.delta==null?'—':(x.approvedException?'0 (استثناء معتمد) ':x.delta))+'</b></td><td>'+esc(x.engineer_name)+'</td></tr>').join('')||'<tr><td colspan="7"><div class="empty">لا توجد بيانات مطابقة.</div></td></tr>';
  $('result').style.display='block';$('msg').className='msg ok';$('msg').textContent=usable.length?('✓ إجمالي الزيارات المعروضة: '+calculated.length+'، والزيارات التي أمكن حساب العينات منها: '+usable.length+'.'):'لا توجد زيارات لها قراءة سابقة يمكن حساب العينات منها.';
 }
 </script></body></html>
