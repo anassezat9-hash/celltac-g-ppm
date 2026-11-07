@@ -25,8 +25,8 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
  <div class="page-head">
   <div>
    <h1>⭐ العملاء المهمين</h1>
-   <div class="small" style="color:#0f6673;font-weight:700">الجهات التي حققت 2,500 عينة أو أكثر خلال آخر 45 يومًا من أحدث تاريخ زيارة مسجل</div>
-   <div class="status-line">الفترة تنتهي عند أحدث تاريخ زيارة مسجل في قاعدة البيانات، وليس تاريخ اليوم. إنتاج كل جهاز = آخر Total Count حتى هذا التاريخ − آخر قراءة قبل بداية آخر 45 يومًا.</div>
+   <div class="small" style="color:#0f6673;font-weight:700">الجهات التي حقق أحد أجهزتها 2,500 عينة أو أكثر بين آخر زيارتين بفاصل لا يتجاوز 45 يومًا</div>
+   <div class="status-line">يُصنَّف الجهاز عميلًا مهمًا إذا زاد Total Count بمقدار 2,500 عينة أو أكثر بين آخر زيارتين متتاليتين، بشرط ألا يزيد الفاصل بينهما عن 45 يومًا.</div>
   </div>
   <div class="toolbar-actions">
    <span id="lastUpdated" class="last-updated">لم يتم التحديث بعد</span>
@@ -36,7 +36,7 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
  <div class="card">
   <h2>⚙️ إعدادات التصنيف</h2>
   <div class="filter-grid" style="grid-template-columns:repeat(2,minmax(150px,1fr))">
-   <div class="filter-box"><label for="periodDays">عدد أيام الفترة (حتى 45 يومًا)</label><input id="periodDays" type="number" min="1" max="45" step="1" value="45"><div class="small muted" style="margin-top:5px">تبدأ الفترة من اليوم المحدد تلقائيًا حتى اليوم.</div></div>
+   <div class="filter-box"><label for="periodDays">أقصى فاصل بين زيارتين (يومًا)</label><input id="periodDays" type="number" min="1" max="45" step="1" value="45"><div class="small muted" style="margin-top:5px">يُحسب الفرق بين آخر زيارتين للجهاز؛ الحد الأقصى 45 يومًا.</div></div>
    <div class="filter-box"><label for="threshold">الحد الأدنى للعينات</label><input id="threshold" type="number" min="0" step="1" value="2500"><div class="small muted" style="margin-top:5px">أي جهة تصل إلى الرقم المحدد أو تتجاوزه تظهر في القائمة.</div></div>
   </div>
   <div id="msg" class="msg"></div>
@@ -130,46 +130,39 @@ async function loadData(){
  }
 }
 function render(){
- const days=Math.max(1,Math.min(45,Math.floor(Number($('periodDays').value)||45)));$('periodDays').value=String(days);
- const latestDates=visits.map(v=>String(v.visit_date||'').slice(0,10)).filter(x=>x.length===10&&x[4]==='-'&&x[7]==='-').sort();
- if(!latestDates.length){$('msg').className='msg err';$('msg').textContent='لا توجد تواريخ زيارات مسجلة لحساب الفترة.';return}
- const periodEnd=latestDates[latestDates.length-1],periodStart=shiftDate(periodEnd,-(days-1));
+ const maxGap=Math.max(1,Math.min(45,Math.floor(Number($('periodDays').value)||45)));$('periodDays').value=String(maxGap);
  const threshold=Math.max(0,Number($('threshold').value||2500));
- $('periodLabel').textContent='الفترة: '+periodStart+' إلى '+periodEnd+' ('+days+' يومًا) | الحد الأدنى: '+formatNumber(threshold)+' عينة';
- const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
+ $('periodLabel').textContent='شرط التأهل: فرق العداد '+formatNumber(threshold)+' عينة أو أكثر بين آخر زيارتين متتاليتين، والفاصل بينهما لا يتجاوز '+maxGap+' يومًا';
+ const ordered=[...visits].filter(v=>v.visit_date).sort((a,b)=>String(a.visit_date).localeCompare(String(b.visit_date))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
  const byDevice=new Map();ordered.forEach(v=>{const key=v.device_id||'visit:'+v.id;if(!byDevice.has(key))byDevice.set(key,[]);byDevice.get(key).push(v)});
- const blockedConflicts=conflicts.filter(x=>x.status==='open'&&x.visit_date>=periodStart&&x.visit_date<=periodEnd);
- const blockedDeviceIds=new Set(blockedConflicts.map(x=>x.device_id).filter(Boolean));
  const calculated=[],uncalculated=[];
  byDevice.forEach(rows=>{
-  const previousRows=rows.filter(v=>v.visit_date<periodStart);
-  const currentRows=rows.filter(v=>v.visit_date>=periodStart&&v.visit_date<=periodEnd);
-  if(!currentRows.length)return;
-  const current=currentRows[currentRows.length-1],previous=previousRows.length?previousRows[previousRows.length-1]:null;
+  if(rows.length<2)return;
+  const previous=rows[rows.length-2],current=rows[rows.length-1];
+  const gap=Math.round((new Date(current.visit_date+'T12:00:00')-new Date(previous.visit_date+'T12:00:00'))/86400000);
   const d=current.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=String(d.serial_number||'').trim()||'بدون Serial';
-  const blocked=blockedDeviceIds.has(current.device_id);
-  const currentCount=Number(current.total_count),previousCount=previous?Number(previous.total_count):null;
-  const periodSamples=previous&&Number.isFinite(currentCount)&&Number.isFinite(previousCount)?currentCount-previousCount:null;
-  const row={...current,hospital,serial,deviceKey:current.device_id||current.id,visitsInPeriod:currentRows.length,periodSamples,baselineDate:previous?.visit_date||null,baselineCount:previousCount,currentCount,blocked};
-  if(blocked){uncalculated.push({...row,reason:'يوجد تعارض قراءة مفتوح للجهاز داخل الفترة المحددة'});return}
-  if(!previous){uncalculated.push({...row,reason:'لا توجد قراءة سابقة قبل بداية الفترة لحساب إنتاجها'});return}
-  if(periodSamples<0){uncalculated.push({...row,reason:'قراءة نهاية الفترة أقل من القراءة السابقة؛ يلزم مراجعة العداد'});return}
-  calculated.push(row);
+  const prevCount=Number(previous.total_count),currentCount=Number(current.total_count),samples=currentCount-prevCount;
+  const row={...current,hospital,serial,deviceKey:current.device_id||current.id,previousDate:previous.visit_date,previousCount:prevCount,currentCount,gap,samples};
+  if(!Number.isFinite(gap)||gap<0||gap>maxGap)return;
+  const openConflict=conflicts.some(x=>x.status==='open'&&x.device_id===current.device_id&&x.visit_date>=previous.visit_date&&x.visit_date<=current.visit_date);
+  if(openConflict){uncalculated.push({...row,reason:'يوجد تعارض قراءة مفتوح بين الزيارتين'});return}
+  if(!Number.isFinite(samples)||samples<0){uncalculated.push({...row,reason:'قراءة العداد الحالية أقل من السابقة؛ يلزم المراجعة'});return}
+  if(samples>=threshold)calculated.push(row);
  });
- const hospitalMap=new Map();calculated.forEach(x=>{
+ const hospitalMap=new Map();
+ calculated.forEach(x=>{
   if(!hospitalMap.has(x.hospital))hospitalMap.set(x.hospital,{name:x.hospital,devices:new Map(),visits:0,samples:0,lastVisit:''});
-  const h=hospitalMap.get(x.hospital);h.visits+=x.visitsInPeriod;if(x.visit_date>h.lastVisit)h.lastVisit=x.visit_date;
-  h.devices.set(x.deviceKey,{serial:x.serial,visits:x.visitsInPeriod,samples:x.periodSamples,lastVisit:x.visit_date,baselineDate:x.baselineDate,baselineCount:x.baselineCount,currentCount:x.currentCount});h.samples+=x.periodSamples;
+  const h=hospitalMap.get(x.hospital);h.visits++;if(x.visit_date>h.lastVisit)h.lastVisit=x.visit_date;
+  h.devices.set(x.deviceKey,{serial:x.serial,visits:2,samples:x.samples,lastVisit:x.visit_date,previousDate:x.previousDate,previousCount:x.previousCount,currentCount:x.currentCount,gap:x.gap});h.samples+=x.samples;
  });
- groups=[...hospitalMap.values()].filter(x=>x.samples>=threshold).sort((a,b)=>b.samples-a.samples||a.name.localeCompare(b.name,'ar'));
+ groups=[...hospitalMap.values()].filter(x=>x.devices.size>0).sort((a,b)=>b.samples-a.samples||a.name.localeCompare(b.name,'ar'));
  const totalSamples=groups.reduce((n,x)=>n+x.samples,0),totalDevices=groups.reduce((n,x)=>n+x.devices.size,0);
  $('customerCount').textContent=formatNumber(groups.length);$('importantSamples').textContent=formatNumber(totalSamples);$('importantDevices').textContent=formatNumber(totalDevices);
- $('customersBody').innerHTML=groups.length?groups.map((x,i)=>'<tr><td><span class="rank">'+(i+1)+'</span></td><td class="customer-name">'+esc(x.name)+'</td><td>'+formatNumber(x.devices.size)+'</td><td>'+formatNumber(x.visits)+'</td><td class="sample-number">'+formatNumber(x.samples)+'</td><td>'+esc(x.lastVisit||'—')+'</td><td class="customer-actions"><button class="btn btn-small" data-customer="'+encodeURIComponent(x.name)+'">تفاصيل الأجهزة</button></td></tr>').join(''):'<tr><td colspan="7"><div class="empty">لا توجد جهات وصلت إلى '+formatNumber(threshold)+' عينة في آخر '+days+' يومًا.</div></td></tr>';
+ $('customersBody').innerHTML=groups.length?groups.map((x,i)=>'<tr><td><span class="rank">'+(i+1)+'</span></td><td class="customer-name">'+esc(x.name)+'</td><td>'+formatNumber(x.devices.size)+'</td><td>'+formatNumber(x.visits)+'</td><td class="sample-number">'+formatNumber(x.samples)+'</td><td>'+esc(x.lastVisit||'—')+'</td><td class="customer-actions"><button class="btn btn-small" data-customer="'+encodeURIComponent(x.name)+'">تفاصيل الأجهزة</button></td></tr>').join(''):'<tr><td colspan="7"><div class="empty">لا توجد جهات لديها جهاز حقق '+formatNumber(threshold)+' عينة أو أكثر بين آخر زيارتين خلال '+maxGap+' يومًا.</div></td></tr>';
  $('customersBody').querySelectorAll('[data-customer]').forEach(b=>b.onclick=()=>showDetails(decodeURIComponent(b.dataset.customer)));
- $('conflictCard').style.display=blockedConflicts.length?'block':'none';
- $('conflictBody').innerHTML=blockedConflicts.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital_name||'جهة غير مسجلة')+'</td><td><b>'+esc(x.serial_number||'—')+'</b></td><td>'+esc(x.visit_date||'—')+'</td><td>'+formatNumber(x.previous_total_count)+'</td><td>'+formatNumber(x.current_total_count)+'</td><td style="color:#b42318;font-weight:800">'+formatNumber(x.difference)+'</td></tr>').join('');
- $('uncalculatedCard').style.display=uncalculated.length?'block':'none';
- $('uncalculatedBody').innerHTML=uncalculated.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.visit_date||'—')+' ('+formatNumber(x.currentCount)+')</td><td>'+esc(x.baselineDate||'لا توجد قراءة قبل الفترة')+(x.baselineCount==null?'':' ('+formatNumber(x.baselineCount)+')')+'</td><td>'+esc(x.reason)+'</td></tr>').join('');
+ $('conflictCard').style.display=uncalculated.length?'block':'none';
+ $('conflictBody').innerHTML=uncalculated.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.previousDate)+' ('+formatNumber(x.previousCount)+')</td><td>'+esc(x.visit_date)+' ('+formatNumber(x.currentCount)+')</td><td>'+esc(x.reason)+'</td><td>'+formatNumber(x.samples)+'</td></tr>').join('');
+ $('uncalculatedCard').style.display='none';
  $('detailPanel').classList.remove('open');
 }
 function showDetails(name){
