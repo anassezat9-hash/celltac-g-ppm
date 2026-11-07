@@ -37,11 +37,16 @@
    }).sort((a,b)=>timeOf(a)-timeOf(b));
    if(!replacements.length)return;
    correctedAuditIds.add(del.id);
-   replacements.forEach(x=>correctedAuditIds.add(x.id));
-   visitInserts.filter(ins=>{
+   correctedAuditIds.add(replacements[0].id);
+   const priorInserts=visitInserts.filter(ins=>{
     const delta=deletedAt-timeOf(ins);
-    return ins.device_id===del.device_id&&ins.engineer_id===del.engineer_id&&ins.actor_id===del.actor_id&&visitDateOf(ins)===visitDate&&delta>=0&&delta<=correctionWindow&&(ins.entity_id===del.entity_id||delta<=correctionWindow);
-   }).forEach(x=>correctedAuditIds.add(x.id));
+    return ins.device_id===del.device_id&&ins.engineer_id===del.engineer_id&&ins.actor_id===del.actor_id&&visitDateOf(ins)===visitDate&&delta>=0&&delta<=correctionWindow;
+   }).sort((a,b)=>{
+    if(a.entity_id===del.entity_id)return -1;
+    if(b.entity_id===del.entity_id)return 1;
+    return timeOf(b)-timeOf(a);
+   });
+   if(priorInserts.length)correctedAuditIds.add(priorInserts[0].id);
   });
   const engineerEditIds=new Set(records.filter(x=>x.entity_type==='visit'&&x.action==='visit_update'&&isEngineerAction(x)).map(x=>x.id));
   const decidedIds=new Set(records.filter(x=>x.entity_type==='visit'&&['visit_accepted','visit_cancelled'].includes(x.action)).map(x=>x.entity_id));
