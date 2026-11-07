@@ -26,7 +26,7 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
   <div>
    <h1>⭐ العملاء المهمين</h1>
    <div class="small" style="color:#0f6673;font-weight:700">الجهات التي تحقق 2,500 عينة أو أكثر خلال الفترة المحددة</div>
-   <div class="status-line">حساب الشهر = آخر Total Count داخل الفترة − آخر Total Count قبل بداية الفترة، بشرط أن تكون القراءة السابقة خلال 30 يومًا قبل بداية الفترة.</div>
+   <div class="status-line">حساب الشهر = آخر Total Count داخل الفترة − آخر Total Count قبل بداية الفترة. لا يُقبل الحساب إلا إذا كانت القراءة المرجعية خلال 30 يومًا قبل بداية الفترة، والفاصل بين القراءتين لا يتجاوز 45 يومًا.</div>
   </div>
   <div class="toolbar-actions">
    <span id="lastUpdated" class="last-updated">لم يتم التحديث بعد</span>
@@ -81,7 +81,7 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
    <tbody id="uncalculatedBody"></tbody>
   </table></div>
  </div>
- <div class="small muted" style="margin:12px 2px">يتم احتساب إنتاج الفترة مرة واحدة لكل جهاز من آخر قراءة داخل الفترة مقارنة بآخر قراءة مرجعية خلال الثلاثين يومًا السابقة لبداية الفترة. إذا كانت القراءة المرجعية أقدم من ذلك، لا نحسب الجهاز حتى لا ننسب إنتاج عدة أشهر إلى شهر واحد. يتم التحديث تلقائيًا كل 5 دقائق.</div></div>
+ <div class="small muted" style="margin:12px 2px">يتم احتساب إنتاج الفترة مرة واحدة لكل جهاز من آخر قراءة داخل الفترة مقارنة بآخر قراءة مرجعية خلال الثلاثين يومًا السابقة لبداية الفترة، بشرط ألا يزيد الفاصل بين القراءتين على 45 يومًا. إذا لم يتحقق الشرطان، لا نحسب الجهاز حتى لا ننسب إنتاج عدة أشهر إلى شهر واحد. يتم التحديث تلقائيًا كل 5 دقائق.</div></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js?v=20261107-important-customers1"></script>
