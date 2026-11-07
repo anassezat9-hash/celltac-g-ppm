@@ -25,8 +25,8 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
  <div class="page-head">
   <div>
    <h1>⭐ العملاء المهمين</h1>
-   <div class="small" style="color:#0f6673;font-weight:700">الجهات التي تحقق 2,500 عينة أو أكثر خلال الفترة المحددة</div>
-   <div class="status-line">حساب الشهر = آخر Total Count داخل الفترة − آخر Total Count قبل بداية الفترة. لا يُقبل الحساب إلا إذا كانت القراءة المرجعية خلال 30 يومًا قبل بداية الفترة، والفاصل بين القراءتين لا يتجاوز 45 يومًا.</div>
+   <div class="small" style="color:#0f6673;font-weight:700">الجهات التي حققت 2,500 عينة أو أكثر خلال الشهر المختار</div>
+   <div class="status-line">إنتاج الشهر لكل جهاز = آخر Total Count في الشهر المختار − آخر Total Count في الشهر السابق. لا نجمع فروق الزيارات المتعددة داخل الشهر.</div>
   </div>
   <div class="toolbar-actions">
    <span id="lastUpdated" class="last-updated">لم يتم التحديث بعد</span>
@@ -35,9 +35,8 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
  </div>
  <div class="card">
   <h2>⚙️ إعدادات التصنيف</h2>
-  <div class="filter-grid">
-   <div class="filter-box"><label for="from">من تاريخ</label><input id="from" type="date"></div>
-   <div class="filter-box"><label for="to">إلى تاريخ</label><input id="to" type="date"></div>
+  <div class="filter-grid" style="grid-template-columns:repeat(2,minmax(150px,1fr))">
+   <div class="filter-box"><label for="month">الشهر المطلوب</label><input id="month" type="month"></div>
    <div class="filter-box"><label for="threshold">الحد الأدنى للعينات</label><input id="threshold" type="number" min="0" step="1" value="2500"><div class="small muted" style="margin-top:5px">أي جهة تصل إلى الرقم المحدد أو تتجاوزه تظهر في القائمة.</div></div>
   </div>
   <div id="msg" class="msg"></div>
@@ -60,7 +59,7 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
   <div class="section-title"><h2 id="detailTitle">تفاصيل العميل</h2><button id="closeDetails" class="btn btn-small">إغلاق التفاصيل</button></div>
   <div class="table-wrap" style="margin-top:10px">
    <table class="report-table">
-    <thead><tr><th>Serial</th><th>عدد الزيارات</th><th>العينات المحسوبة</th><th>آخر زيارة</th></tr></thead>
+    <thead><tr><th>Serial</th><th>قراءة الشهر السابق</th><th>آخر قراءة بالشهر المختار</th><th>زيارات الشهر</th><th>عينات الشهر</th></tr></thead>
     <tbody id="detailBody"></tbody>
    </table>
   </div>
@@ -74,29 +73,31 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
    </table>
   </div>
  </div>
- <div class="small muted" style="margin:12px 2px"><div class="card warning-card" id="uncalculatedCard" style="display:none;margin-top:14px">
+ <div class="card warning-card" id="uncalculatedCard" style="display:none;margin-top:14px">
   <div class="section-title"><h2>📌 أجهزة لم يُحسب إنتاجها الشهري</h2><span class="small muted">لا تدخل في ترتيب العملاء حتى تتوفر قراءة صالحة</span></div>
   <div class="table-wrap" style="margin-top:10px"><table class="report-table">
-   <thead><tr><th>الجهة</th><th>Serial</th><th>آخر زيارة داخل الفترة</th><th>آخر قراءة مرجعية متاحة</th><th>السبب</th></tr></thead>
+   <thead><tr><th>الجهة</th><th>Serial</th><th>آخر قراءة بالشهر</th><th>قراءة الشهر السابق</th><th>السبب</th></tr></thead>
    <tbody id="uncalculatedBody"></tbody>
   </table></div>
  </div>
- <div class="small muted" style="margin:12px 2px">يتم احتساب إنتاج الفترة مرة واحدة لكل جهاز من آخر قراءة داخل الفترة مقارنة بآخر قراءة مرجعية خلال الثلاثين يومًا السابقة لبداية الفترة، بشرط ألا يزيد الفاصل بين القراءتين على 45 يومًا. إذا لم يتحقق الشرطان، لا نحسب الجهاز حتى لا ننسب إنتاج عدة أشهر إلى شهر واحد. يتم التحديث تلقائيًا كل 5 دقائق.</div></div>
+ <div class="small muted" style="margin:12px 2px">يتم احتساب إنتاج الشهر مرة واحدة لكل جهاز: آخر قراءة في الشهر المختار ناقص آخر قراءة في الشهر السابق. إذا لم توجد قراءة في الشهر السابق، أو كانت القراءة الحالية أقل من السابقة، لن يتم احتساب الجهاز وتظهر حالته في قائمة الأجهزة غير المحسوبة. يتم التحديث تلقائيًا كل 5 دقائق.</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=20261107-important-customers1"></script>
-<script src="js/common.js?v=20261107-important-customers1"></script>
+<script src="js/config.js?v=20261107-important-customers2"></script>
+<script src="js/common.js?v=20261107-important-customers2"></script>
 <script>
 let profile=null,visits=[],conflicts=[],groups=[],busy=false,refreshTimer=null;
 const $=id=>document.getElementById(id);
 const formatNumber=n=>Number(n||0).toLocaleString('en-US');
 const todayLocal=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
-const shiftDate=(date,days)=>{const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+days);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+const monthStart=ym=>ym+'-01';
+const monthEnd=ym=>{const [y,m]=ym.split('-').map(Number);return [y,String(m).padStart(2,'0'),String(new Date(y,m,0).getDate()).padStart(2,'0')].join('-')};
+const previousMonth=ym=>{const [y,m]=ym.split('-').map(Number);const d=new Date(y,m-2,1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0')].join('-')};
 (async()=>{
  profile=await requireRole('manager');if(!profile)return;
  $('who').textContent=profile.full_name||'';
- const end=todayLocal();$('to').value=end;$('from').value=shiftDate(end,-29);
- $('refresh').onclick=loadData;$('from').onchange=render;$('to').onchange=render;$('threshold').oninput=render;
+ const end=todayLocal();$('month').value=end.slice(0,7);
+ $('refresh').onclick=loadData;$('month').onchange=render;$('threshold').oninput=render;
  $('closeDetails').onclick=()=>{$('detailPanel').classList.remove('open')};
  await loadData();
  refreshTimer=setInterval(()=>loadData(),5*60*1000);
@@ -131,59 +132,58 @@ async function loadData(){
  }
 }
 function render(){
- const from=$('from').value,to=$('to').value;
- if(from&&to&&from>to){$('msg').className='msg err';$('msg').textContent='تاريخ البداية يجب أن يكون قبل تاريخ النهاية.';return}
- if(!from&&!to){$('msg').className='msg err';$('msg').textContent='حدد فترة زمنية لاحتساب العينات.';return}
+ const month=$('month').value;
+ if(!month||!/^[0-9]{4}-[0-9]{2}$/.test(month)){$('msg').className='msg err';$('msg').textContent='اختر الشهر المطلوب.';return}
+ const currentMonthStart=monthStart(month),currentMonthEnd=monthEnd(month);
+ const today=todayLocal(),periodEnd=month===today.slice(0,7)&&today<currentMonthEnd?today:currentMonthEnd;
+ const prevMonth=previousMonth(month),prevStart=monthStart(prevMonth),prevEnd=monthEnd(prevMonth);
  const threshold=Math.max(0,Number($('threshold').value||2500));
- $('periodLabel').textContent=(from||'بلا بداية')+' — '+(to||'حتى الآن')+' | الحد الأدنى: '+formatNumber(threshold)+' عينة';
- const blockedConflicts=conflicts.filter(x=>x.status==='open'&&(!from||x.visit_date>=from)&&(!to||x.visit_date<=to));
- const blockedHospitals=new Set(blockedConflicts.map(x=>x.hospital_name||'جهة غير مسجلة'));
- const approvedVisitIds=new Set(conflicts.filter(x=>x.status==='approved_closed').map(x=>x.visit_id).filter(Boolean));
+ $('periodLabel').textContent='الشهر: '+month+' | المقارنة مع: '+prevMonth+' | الحد الأدنى: '+formatNumber(threshold)+' عينة';
  const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
  const byDevice=new Map();
  ordered.forEach(v=>{const key=v.device_id||'visit:'+v.id;if(!byDevice.has(key))byDevice.set(key,[]);byDevice.get(key).push(v)});
+ const blockedConflicts=conflicts.filter(x=>x.status==='open'&&x.visit_date>=prevStart&&x.visit_date<=periodEnd);
+ const blockedDeviceIds=new Set(blockedConflicts.map(x=>x.device_id).filter(Boolean));
  const calculated=[],uncalculated=[];
- const baselineStart=shiftDate(from,-30);
  byDevice.forEach(rows=>{
-  const inRange=rows.filter(v=>(!from||v.visit_date>=from)&&(!to||v.visit_date<=to));
-  if(!inRange.length)return;
-  const current=inRange[inRange.length-1];
-  const previous=rows.filter(v=>from&&v.visit_date<from&&v.visit_date>=baselineStart).slice(-1)[0]||null;
-  const olderPrevious=rows.filter(v=>from&&v.visit_date<baselineStart).slice(-1)[0]||null;
+  const previousRows=rows.filter(v=>v.visit_date>=prevStart&&v.visit_date<=prevEnd);
+  const currentRows=rows.filter(v=>v.visit_date>=currentMonthStart&&v.visit_date<=periodEnd);
+  if(!currentRows.length)return;
+  const current=currentRows[currentRows.length-1];
+  const previous=previousRows.length?previousRows[previousRows.length-1]:null;
   const d=current.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=String(d.serial_number||'').trim()||'بدون Serial';
-  const blocked=blockedHospitals.has(hospital),currentCount=Number(current.total_count),previousCount=previous?Number(previous.total_count):null;
+  const blocked=blockedDeviceIds.has(current.device_id);
+  const currentCount=Number(current.total_count),previousCount=previous?Number(previous.total_count):null;
   const monthlySamples=previous&&Number.isFinite(currentCount)&&Number.isFinite(previousCount)?currentCount-previousCount:null;
-  const row={...current,hospital,serial,deviceKey:current.device_id||current.id,visitsInPeriod:inRange.length,monthlySamples,baselineDate:previous?.visit_date||null,baselineCount:previousCount,lastOlderDate:olderPrevious?.visit_date||null,blocked};
-  if(blocked){uncalculated.push({...row,reason:'توجد قراءة متعارضة مفتوحة للجهة'});return}
-  if(monthlySamples==null){uncalculated.push({...row,reason:'لا توجد قراءة مرجعية خلال 30 يومًا قبل بداية الفترة'});return}
-  if(monthlySamples<0){uncalculated.push({...row,reason:'العداد الحالي أقل من القراءة المرجعية؛ يلزم مراجعة احتمال تصفير العداد أو خطأ القراءة'});return}
-  const readingGap=Math.round((new Date(current.visit_date+'T00:00:00')-new Date(previous.visit_date+'T00:00:00'))/86400000);
-  if(readingGap>45){uncalculated.push({...row,reason:'الفاصل بين القراءتين '+readingGap+' يومًا؛ أكبر من 45 يومًا ولا يصلح لاعتباره إنتاج شهر واحد'});return}
+  const row={...current,hospital,serial,deviceKey:current.device_id||current.id,visitsInPeriod:currentRows.length,monthlySamples,baselineDate:previous?.visit_date||null,baselineCount:previousCount,currentCount,blocked};
+  if(blocked){uncalculated.push({...row,reason:'يوجد تعارض قراءة مفتوح للجهاز في الشهر السابق أو الشهر المختار'});return}
+  if(!previous){uncalculated.push({...row,reason:'لا توجد قراءة مسجلة للجهاز في الشهر السابق ('+prevMonth+')'});return}
+  if(monthlySamples<0){uncalculated.push({...row,reason:'قراءة الشهر المختار أقل من قراءة الشهر السابق؛ يلزم مراجعة العداد'});return}
   calculated.push(row);
  });
  const hospitalMap=new Map();
  calculated.forEach(x=>{
   if(!hospitalMap.has(x.hospital))hospitalMap.set(x.hospital,{name:x.hospital,devices:new Map(),visits:0,samples:0,lastVisit:''});
   const h=hospitalMap.get(x.hospital);h.visits+=x.visitsInPeriod;if(x.visit_date>h.lastVisit)h.lastVisit=x.visit_date;
-  h.devices.set(x.deviceKey,{serial:x.serial,visits:x.visitsInPeriod,samples:x.monthlySamples,lastVisit:x.visit_date,baselineDate:x.baselineDate,baselineCount:x.baselineCount});
+  h.devices.set(x.deviceKey,{serial:x.serial,visits:x.visitsInPeriod,samples:x.monthlySamples,lastVisit:x.visit_date,baselineDate:x.baselineDate,baselineCount:x.baselineCount,currentCount:x.currentCount});
   h.samples+=x.monthlySamples;
  });
  groups=[...hospitalMap.values()].filter(x=>x.samples>=threshold).sort((a,b)=>b.samples-a.samples||a.name.localeCompare(b.name,'ar'));
  const totalSamples=groups.reduce((n,x)=>n+x.samples,0),totalDevices=groups.reduce((n,x)=>n+x.devices.size,0);
  $('customerCount').textContent=formatNumber(groups.length);$('importantSamples').textContent=formatNumber(totalSamples);$('importantDevices').textContent=formatNumber(totalDevices);
- $('customersBody').innerHTML=groups.length?groups.map((x,i)=>'<tr><td><span class="rank">'+(i+1)+'</span></td><td class="customer-name">'+esc(x.name)+'</td><td>'+formatNumber(x.devices.size)+'</td><td>'+formatNumber(x.visits)+'</td><td class="sample-number">'+formatNumber(x.samples)+'</td><td>'+esc(x.lastVisit||'—')+'</td><td class="customer-actions"><button class="btn btn-small" data-customer="'+encodeURIComponent(x.name)+'">تفاصيل الأجهزة</button></td></tr>').join(''):'<tr><td colspan="7"><div class="empty">لا توجد جهات وصلت إلى '+formatNumber(threshold)+' عينة في الفترة المحددة.</div></td></tr>';
+ $('customersBody').innerHTML=groups.length?groups.map((x,i)=>'<tr><td><span class="rank">'+(i+1)+'</span></td><td class="customer-name">'+esc(x.name)+'</td><td>'+formatNumber(x.devices.size)+'</td><td>'+formatNumber(x.visits)+'</td><td class="sample-number">'+formatNumber(x.samples)+'</td><td>'+esc(x.lastVisit||'—')+'</td><td class="customer-actions"><button class="btn btn-small" data-customer="'+encodeURIComponent(x.name)+'">تفاصيل الأجهزة</button></td></tr>').join(''):'<tr><td colspan="7"><div class="empty">لا توجد جهات وصلت إلى '+formatNumber(threshold)+' عينة في الشهر المحدد.</div></td></tr>';
  $('customersBody').querySelectorAll('[data-customer]').forEach(b=>b.onclick=()=>showDetails(decodeURIComponent(b.dataset.customer)));
  $('conflictCard').style.display=blockedConflicts.length?'block':'none';
  $('conflictBody').innerHTML=blockedConflicts.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital_name||'جهة غير مسجلة')+'</td><td><b>'+esc(x.serial_number||'—')+'</b></td><td>'+esc(x.visit_date||'—')+'</td><td>'+formatNumber(x.previous_total_count)+'</td><td>'+formatNumber(x.current_total_count)+'</td><td style="color:#b42318;font-weight:800">'+formatNumber(x.difference)+'</td></tr>').join('');
  $('uncalculatedCard').style.display=uncalculated.length?'block':'none';
- $('uncalculatedBody').innerHTML=uncalculated.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.visit_date||'—')+'</td><td>'+esc(x.baselineDate||x.lastOlderDate||'لا توجد قراءة سابقة')+'</td><td>'+esc(x.reason)+'</td></tr>').join('');
+ $('uncalculatedBody').innerHTML=uncalculated.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.visit_date||'—')+' ('+formatNumber(x.currentCount)+')</td><td>'+esc(x.baselineDate||'لا توجد قراءة في '+prevMonth)+(x.baselineCount==null?'':' ('+formatNumber(x.baselineCount)+')')+'</td><td>'+esc(x.reason)+'</td></tr>').join('');
  $('detailPanel').classList.remove('open');
 }
 function showDetails(name){
  const h=groups.find(x=>x.name===name);if(!h)return;
  $('detailTitle').textContent='تفاصيل أجهزة — '+h.name;
  const data=[...h.devices.values()].sort((a,b)=>b.samples-a.samples||a.serial.localeCompare(b.serial,'en',{numeric:true}));
- $('detailBody').innerHTML=data.map(d=>'<tr><td><b>'+esc(d.serial)+'</b></td><td>'+formatNumber(d.visits)+'</td><td class="sample-number">'+formatNumber(d.samples)+'</td><td>'+esc(d.lastVisit||'—')+'</td></tr>').join('')||'<tr><td colspan="4">لا توجد تفاصيل.</td></tr>';
+ $('detailBody').innerHTML=data.map(d=>'<tr><td><b>'+esc(d.serial)+'</b></td><td>'+esc(d.baselineDate||'—')+' ('+formatNumber(d.baselineCount)+')</td><td>'+esc(d.lastVisit||'—')+' ('+formatNumber(d.currentCount)+')</td><td>'+formatNumber(d.visits)+'</td><td class="sample-number">'+formatNumber(d.samples)+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد تفاصيل.</td></tr>';
  $('detailPanel').classList.add('open');$('detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 </script>
