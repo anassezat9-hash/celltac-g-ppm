@@ -25,8 +25,8 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
  <div class="page-head">
   <div>
    <h1>⭐ العملاء المهمين</h1>
-   <div class="small" style="color:#0f6673;font-weight:700">الجهات التي حققت 2,500 عينة أو أكثر خلال الفترة المحددة (حتى 45 يومًا)</div>
-   <div class="status-line">إنتاج الفترة لكل جهاز = آخر Total Count داخل الفترة − آخر قراءة مسجلة قبل بداية الفترة. لا نجمع فروق الزيارات المتعددة.</div>
+   <div class="small" style="color:#0f6673;font-weight:700">الجهات التي حققت 2,500 عينة أو أكثر خلال آخر 45 يومًا من أحدث تاريخ زيارة مسجل</div>
+   <div class="status-line">الفترة تنتهي عند أحدث تاريخ زيارة مسجل في قاعدة البيانات، وليس تاريخ اليوم. إنتاج كل جهاز = آخر Total Count حتى هذا التاريخ − آخر قراءة قبل بداية آخر 45 يومًا.</div>
   </div>
   <div class="toolbar-actions">
    <span id="lastUpdated" class="last-updated">لم يتم التحديث بعد</span>
@@ -131,7 +131,9 @@ async function loadData(){
 }
 function render(){
  const days=Math.max(1,Math.min(45,Math.floor(Number($('periodDays').value)||45)));$('periodDays').value=String(days);
- const periodEnd=todayLocal(),periodStart=shiftDate(periodEnd,-(days-1));
+ const latestDates=visits.map(v=>String(v.visit_date||'').slice(0,10)).filter(x=>x.length===10&&x[4]==='-'&&x[7]==='-').sort();
+ if(!latestDates.length){$('msg').className='msg err';$('msg').textContent='لا توجد تواريخ زيارات مسجلة لحساب الفترة.';return}
+ const periodEnd=latestDates[latestDates.length-1],periodStart=shiftDate(periodEnd,-(days-1));
  const threshold=Math.max(0,Number($('threshold').value||2500));
  $('periodLabel').textContent='الفترة: '+periodStart+' إلى '+periodEnd+' ('+days+' يومًا) | الحد الأدنى: '+formatNumber(threshold)+' عينة';
  const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
