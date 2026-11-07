@@ -49,12 +49,20 @@
    if(priorInserts.length)correctedAuditIds.add(priorInserts[0].id);
   });
   const engineerEditIds=new Set(records.filter(x=>x.entity_type==='visit'&&x.action==='visit_update'&&isEngineerAction(x)).map(x=>x.id));
+  const cutoff=new Date();cutoff.setHours(0,0,0,0);cutoff.setDate(cutoff.getDate()-7);
+  const needsManagerApproval=x=>{
+   if(x.action!=='visit_insert'||x.entity_type!=='visit')return true;
+   const visitDate=visitDateOf(x);
+   if(!visitDate)return false;
+   const parsed=new Date(visitDate+'T00:00:00');
+   return !Number.isNaN(parsed.getTime())&&parsed<cutoff;
+  };
   const decidedIds=new Set(records.filter(x=>x.entity_type==='visit'&&['visit_accepted','visit_cancelled'].includes(x.action)).map(x=>x.entity_id));
   const deletedIds=new Set(records.filter(x=>x.entity_type==='visit'&&x.action==='visit_delete').map(x=>x.entity_id));
   const conflictCancelDevices=new Set(records.filter(x=>x.action==='conflict_cancelled').map(x=>x.device_id).filter(Boolean));
   const a=records.filter(x=>{
    if(correctedAuditIds.has(x.id)||engineerEditIds.has(x.id))return false;
-   if(x.entity_type==='visit'&&x.action==='visit_insert'&&(decidedIds.has(x.entity_id)||(!liveVisits[x.entity_id]&&deletedIds.has(x.entity_id))))return false;
+   if(x.entity_type==='visit'&&x.action==='visit_insert'&&(!needsManagerApproval(x)||decidedIds.has(x.entity_id)||(!liveVisits[x.entity_id]&&deletedIds.has(x.entity_id))))return false;
    if(x.entity_type==='visit'&&x.action==='visit_delete'&&(decidedIds.has(x.entity_id)||conflictCancelDevices.has(x.device_id)))return false;
    const d=x.devices||{};
    return(!serial||String(d.serial_number||'').toLowerCase().includes(serial))&&(!hospital||d.hospital_name===hospital)&&(!engineer||x.engineer_id===engineer)&&(!action||x.action===action)&&(!from||x.created_at.slice(0,10)>=from)&&(!to||x.created_at.slice(0,10)<=to)
@@ -62,7 +70,7 @@
   $('auditCount').textContent='عدد السجلات: '+a.length+' (آخر 1500 سجل)';
   $('auditRows').innerHTML=a.length?a.map(x=>{
    const d=x.devices||{},e=x.engineers||{},o=x.old_data||{},n=x.new_data||{};
-   const eligible=x.action==='visit_insert'&&x.entity_type==='visit'&&liveVisits[x.entity_id]&&!reviewedVisits[x.entity_id];
+   const eligible=x.action==='visit_insert'&&x.entity_type==='visit'&&needsManagerApproval(x)&&liveVisits[x.entity_id]&&!reviewedVisits[x.entity_id];
    const controls=eligible?'<button class="btn btn-primary" data-visit-decision="accept" data-visit-id="'+x.entity_id+'">قبول</button> <button class="btn" data-visit-decision="cancel" data-visit-id="'+x.entity_id+'">إلغاء</button> <button class="btn" style="background:#b42318;color:white" data-visit-decision="delete" data-visit-id="'+x.entity_id+'">حذف نهائي</button>':(x.action==='visit_accepted'?'تم القبول':x.action==='visit_cancelled'?'تم الإلغاء':'—');
    return'<tr><td>'+esc(fmt(x.created_at))+'</td><td>'+esc(actions[x.action]||x.action)+'</td><td>'+esc(d.serial_number||'—')+'</td><td>'+esc(d.hospital_name||'—')+'</td><td>'+esc(e.name||'—')+'</td><td>'+esc(o.total_count??'—')+'</td><td>'+esc(n.total_count??'—')+'</td><td>'+esc(x.actor?.full_name||'—')+'</td><td><button class="btn" data-detail="'+x.id+'">عرض</button></td><td style="min-width:230px;white-space:nowrap">'+controls+'</td></tr>'
   }).join(''):'<tr><td colspan="10">لا توجد سجلات مطابقة.</td></tr>';
