@@ -50,7 +50,7 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
   <div class="section-title"><h2>🏆 قائمة العملاء المهمين</h2><span id="periodLabel" class="small muted"></span></div>
   <div class="table-wrap" style="margin-top:12px">
    <table class="report-table">
-    <thead><tr><th>الترتيب</th><th>الجهة</th><th>عدد الأجهزة</th><th>عدد الزيارات</th><th>إجمالي العينات</th><th>آخر زيارة</th><th>التفاصيل</th></tr></thead>
+    <thead><tr><th>الترتيب</th><th>الجهة</th><th>عدد الأجهزة</th><th>فترات الزيارات المؤهلة</th><th>إجمالي العينات</th><th>آخر زيارة</th><th>التفاصيل</th></tr></thead>
     <tbody id="customersBody"><tr><td colspan="7">جاري تحميل البيانات...</td></tr></tbody>
    </table>
   </div>
@@ -65,22 +65,22 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
   </div>
  </div>
  <div class="card warning-card" id="conflictCard" style="display:none;margin-top:14px">
-  <div class="section-title"><h2>⚠️ جهات مستبعدة مؤقتًا بسبب تعارض قراءة</h2><span class="small muted">لن تدخل التصنيف حتى حسم التعارض</span></div>
+  <div class="section-title"><h2>⚠️ أجهزة مستبعدة من التصنيف للمراجعة</h2><span class="small muted">لن تدخل التصنيف حتى حسم التعارض</span></div>
   <div class="table-wrap" style="margin-top:10px">
    <table class="report-table">
-    <thead><tr><th>الجهة</th><th>Serial</th><th>تاريخ الزيارة</th><th>القراءة السابقة</th><th>القراءة الحالية</th><th>الفرق</th></tr></thead>
+    <thead><tr><th>الجهة</th><th>Serial</th><th>الزيارة السابقة والقراءة</th><th>الزيارة الحالية والقراءة</th><th>سبب الاستبعاد</th><th>الفرق</th></tr></thead>
     <tbody id="conflictBody"></tbody>
    </table>
   </div>
  </div>
  <div class="card warning-card" id="uncalculatedCard" style="display:none;margin-top:14px">
-  <div class="section-title"><h2>📌 أجهزة لم يُحسب إنتاجها الشهري</h2><span class="small muted">لا تدخل في ترتيب العملاء حتى تتوفر قراءة صالحة</span></div>
+  <div class="section-title"><h2>📌 ملاحظات الحساب</h2><span class="small muted">لا تدخل في ترتيب العملاء حتى تتوفر قراءة صالحة</span></div>
   <div class="table-wrap" style="margin-top:10px"><table class="report-table">
    <thead><tr><th>الجهة</th><th>Serial</th><th>آخر قراءة بالشهر</th><th>قراءة الشهر السابق</th><th>السبب</th></tr></thead>
    <tbody id="uncalculatedBody"></tbody>
   </table></div>
  </div>
- <div class="small muted" style="margin:12px 2px">يتم احتساب إنتاج الشهر مرة واحدة لكل جهاز: آخر قراءة في الشهر المختار ناقص آخر قراءة في الشهر السابق. إذا لم توجد قراءة في الشهر السابق، أو كانت القراءة الحالية أقل من السابقة، لن يتم احتساب الجهاز وتظهر حالته في قائمة الأجهزة غير المحسوبة. يتم التحديث تلقائيًا كل 5 دقائق.</div>
+ <div class="small muted" style="margin:12px 2px">يتم فحص آخر زيارتين متتاليتين لكل جهاز. يدخل الجهاز ضمن العملاء المهمين إذا كان فرق Total Count لا يقل عن 2,500 عينة، والفاصل بين الزيارتين لا يزيد عن 45 يومًا. لا تُحتسب الأجهزة التي لديها تعارض قراءة مفتوح بين الزيارتين أو قراءة عداد منخفضة. يتم التحديث تلقائيًا كل 5 دقائق.</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js?v=20261107-important-customers2"></script>
