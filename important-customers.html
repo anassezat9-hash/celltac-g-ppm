@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Celltac G PPM — العملاء المهمين</title>
+<link rel="stylesheet" href="assets/style.css?v=20261107-important-customers1">
+<style>
+body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}.page-head h1{margin:0 0 5px;font-size:22px}.toolbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.filter-grid{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:12px}.filter-box{padding:12px;border:1px solid #e5eaf0;border-radius:12px;background:#fff}.filter-box label{display:block;margin-bottom:6px;font-weight:700;font-size:12px}.filter-box input{width:100%}.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.sum{background:#fff;border:1px solid #e5eaf0;border-radius:14px;padding:14px;text-align:center}.sum span{display:block;color:#64748b;font-size:12px}.sum b{display:block;font-size:25px;margin-top:5px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.section-title h2{margin:0}.table-wrap{overflow:auto}.report-table{width:100%;border-collapse:collapse;min-width:760px}.report-table th,.report-table td{padding:10px 8px;border-bottom:1px solid #e7edf2;text-align:center;font-size:12px;vertical-align:middle}.report-table th{background:#f3f6f8;font-weight:800;position:sticky;top:0}.report-table td:first-child,.report-table th:first-child{text-align:right}.customer-name{font-weight:800;color:#153b45}.sample-number{font-size:15px;font-weight:900;color:#0f6673}.rank{display:inline-flex;align-items:center;justify-content:center;min-width:27px;height:27px;border-radius:50%;background:#e6f3f4;color:#0f6673;font-weight:900}.muted{color:#64748b}.empty{padding:22px;text-align:center;border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc}.status-line{font-size:12px;color:#64748b}.detail-panel{display:none;margin-top:14px}.detail-panel.open{display:block}.warning-card{border-right:4px solid #d97706}.warning-row{background:#fffaf0}.btn-small{font-size:11px;padding:7px 10px}.customer-actions{white-space:nowrap}.last-updated{font-size:11px;color:#64748b}@media(max-width:760px){.filter-grid,.summary{grid-template-columns:1fr}.page-head{align-items:flex-start}.page-head h1{font-size:19px}.report-table{min-width:700px}.sum b{font-size:22px}}
+</style>
+</head>
+<body>
+<header class="header">
+ <div class="brand">Celltac G PPM — العملاء المهمين</div>
+ <div class="userbar">
+  <a class="btn btn-light" href="manager.html">↩ العودة للمدير</a>
+  <span id="who"></span>
+  <button class="btn btn-light" onclick="logout()">خروج</button>
+ </div>
+</header>
+<div class="container page-wrap">
+ <div class="page-head">
+  <div>
+   <h1>⭐ العملاء المهمين</h1>
+   <div class="small" style="color:#0f6673;font-weight:700">الجهات التي تحقق 2,500 عينة أو أكثر خلال الفترة المحددة</div>
+   <div class="status-line">الحساب يعتمد على فرق Total Count بين كل زيارة والقراءة السابقة لنفس Serial، حتى لو كانت القراءة السابقة قبل بداية الفترة.</div>
+  </div>
+  <div class="toolbar-actions">
+   <span id="lastUpdated" class="last-updated">لم يتم التحديث بعد</span>
+   <button id="refresh" class="btn btn-primary">↻ تحديث الآن</button>
+  </div>
+ </div>
+ <div class="card">
+  <h2>⚙️ إعدادات التصنيف</h2>
+  <div class="filter-grid">
+   <div class="filter-box"><label for="from">من تاريخ</label><input id="from" type="date"></div>
+   <div class="filter-box"><label for="to">إلى تاريخ</label><input id="to" type="date"></div>
+   <div class="filter-box"><label for="threshold">الحد الأدنى للعينات</label><input id="threshold" type="number" min="0" step="1" value="2500"><div class="small muted" style="margin-top:5px">أي جهة تصل إلى الرقم المحدد أو تتجاوزه تظهر في القائمة.</div></div>
+  </div>
+  <div id="msg" class="msg"></div>
+ </div>
+ <div class="summary">
+  <div class="sum"><span>عدد العملاء المهمين</span><b id="customerCount">0</b></div>
+  <div class="sum"><span>إجمالي عينات العملاء المهمين</span><b id="importantSamples">0</b></div>
+  <div class="sum"><span>عدد الأجهزة لدى العملاء المهمين</span><b id="importantDevices">0</b></div>
+ </div>
+ <div class="card">
+  <div class="section-title"><h2>🏆 قائمة العملاء المهمين</h2><span id="periodLabel" class="small muted"></span></div>
+  <div class="table-wrap" style="margin-top:12px">
+   <table class="report-table">
+    <thead><tr><th>الترتيب</th><th>الجهة</th><th>عدد الأجهزة</th><th>عدد الزيارات</th><th>إجمالي العينات</th><th>آخر زيارة</th><th>التفاصيل</th></tr></thead>
+    <tbody id="customersBody"><tr><td colspan="7">جاري تحميل البيانات...</td></tr></tbody>
+   </table>
+  </div>
+ </div>
+ <div id="detailPanel" class="card detail-panel">
+  <div class="section-title"><h2 id="detailTitle">تفاصيل العميل</h2><button id="closeDetails" class="btn btn-small">إغلاق التفاصيل</button></div>
+  <div class="table-wrap" style="margin-top:10px">
+   <table class="report-table">
+    <thead><tr><th>Serial</th><th>عدد الزيارات</th><th>العينات المحسوبة</th><th>آخر زيارة</th></tr></thead>
+    <tbody id="detailBody"></tbody>
+   </table>
+  </div>
+ </div>
+ <div class="card warning-card" id="conflictCard" style="display:none;margin-top:14px">
+  <div class="section-title"><h2>⚠️ جهات مستبعدة مؤقتًا بسبب تعارض قراءة</h2><span class="small muted">لن تدخل التصنيف حتى حسم التعارض</span></div>
+  <div class="table-wrap" style="margin-top:10px">
+   <table class="report-table">
+    <thead><tr><th>الجهة</th><th>Serial</th><th>تاريخ الزيارة</th><th>القراءة السابقة</th><th>القراءة الحالية</th><th>الفرق</th></tr></thead>
+    <tbody id="conflictBody"></tbody>
+   </table>
+  </div>
+ </div>
+ <div class="small muted" style="margin:12px 2px">يتم تحديث القائمة تلقائيًا كل 5 دقائق أثناء فتح الصفحة، ويمكن تحديثها يدويًا. لا يتم احتساب أول قراءة للجهاز إذا لم توجد قراءة سابقة يمكن المقارنة بها.</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js?v=20261107-important-customers1"></script>
+<script src="js/common.js?v=20261107-important-customers1"></script>
+<script>
+let profile=null,visits=[],conflicts=[],groups=[],busy=false,refreshTimer=null;
+const $=id=>document.getElementById(id);
+const formatNumber=n=>Number(n||0).toLocaleString('en-US');
+const todayLocal=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+const shiftDate=(date,days)=>{const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+days);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+(async()=>{
+ profile=await requireRole('manager');if(!profile)return;
+ $('who').textContent=profile.full_name||'';
+ const end=todayLocal();$('to').value=end;$('from').value=shiftDate(end,-29);
+ $('refresh').onclick=loadData;$('from').onchange=render;$('to').onchange=render;$('threshold').oninput=render;
+ $('closeDetails').onclick=()=>{$('detailPanel').classList.remove('open')};
+ await loadData();
+ refreshTimer=setInterval(()=>loadData(),5*60*1000);
+})();
+async function fetchAllVisits(){
+ const pageSize=1000,all=[];let offset=0;
+ while(true){
+  const{data,error}=await sb.from('visits').select('id,device_id,engineer_id,visit_date,total_count,created_at,devices:device_id(serial_number,hospital_name),engineers:engineer_id(name)').order('visit_date',{ascending:true}).order('created_at',{ascending:true}).range(offset,offset+pageSize-1);
+  if(error)throw error;
+  const rows=data||[];all.push(...rows);if(rows.length<pageSize)break;offset+=pageSize;
+ }
+ return all;
+}
+async function loadData(){
+ if(busy)return;busy=true;$('refresh').disabled=true;$('refresh').textContent='جاري التحديث...';
+ $('msg').className='msg';$('msg').textContent='جاري تحديث بيانات الزيارات والتعارضات...';
+ try{
+  const sync=await sb.rpc('sync_visit_reading_conflicts');if(sync.error)throw new Error('تعذر مزامنة تعارضات القراءات: '+sync.error.message);
+  const [all,conflictResult]=await Promise.all([
+   fetchAllVisits(),
+   sb.from('visit_reading_conflicts').select('id,device_id,visit_id,serial_number,hospital_name,visit_date,previous_visit_date,current_total_count,previous_total_count,difference,status').in('status',['open','approved_closed'])
+  ]);
+  if(conflictResult.error)throw conflictResult.error;
+  visits=all;conflicts=conflictResult.data||[];
+  render();
+  $('msg').className='msg ok';$('msg').textContent='✓ تم تحديث البيانات بنجاح.';
+  $('lastUpdated').textContent='آخر تحديث: '+new Date().toLocaleString('ar-EG');
+ }catch(e){
+  $('msg').className='msg err';$('msg').textContent='تعذر تحديث العملاء المهمين: '+(e.message||String(e));
+ }finally{
+  busy=false;$('refresh').disabled=false;$('refresh').textContent='↻ تحديث الآن';
+ }
+}
+function render(){
+ const from=$('from').value,to=$('to').value;
+ if(from&&to&&from>to){$('msg').className='msg err';$('msg').textContent='تاريخ البداية يجب أن يكون قبل تاريخ النهاية.';return}
+ if(!from&&!to){$('msg').className='msg err';$('msg').textContent='حدد فترة زمنية لاحتساب العينات.';return}
+ const threshold=Math.max(0,Number($('threshold').value||2500));
+ $('periodLabel').textContent=(from||'بلا بداية')+' — '+(to||'حتى الآن')+' | الحد الأدنى: '+formatNumber(threshold)+' عينة';
+ const blockedConflicts=conflicts.filter(x=>x.status==='open'&&(!from||x.visit_date>=from)&&(!to||x.visit_date<=to));
+ const blockedHospitals=new Set(blockedConflicts.map(x=>x.hospital_name||'جهة غير مسجلة'));
+ const approvedVisitIds=new Set(conflicts.filter(x=>x.status==='approved_closed').map(x=>x.visit_id).filter(Boolean));
+ const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
+ const previous=new Map(),calculated=[];
+ for(const v of ordered){
+  const d=v.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=String(d.serial_number||'').trim()||'بدون Serial';
+  const serialKey=serial!=='بدون Serial'?serial.toUpperCase():null;
+  const deviceKey=serialKey?'serial:'+serialKey:'device:'+(v.device_id||v.id);
+  const cur=Number(v.total_count),prev=previous.has(deviceKey)?Number(previous.get(deviceKey)):null;
+  previous.set(deviceKey,cur);
+  const inPeriod=(!from||v.visit_date>=from)&&(!to||v.visit_date<=to);
+  if(inPeriod&&Number.isFinite(cur)){
+   const blocked=blockedHospitals.has(hospital);
+   const delta=prev==null?null:(approvedVisitIds.has(v.id)?0:cur-prev);
+   calculated.push({...v,hospital,serial,deviceKey,prev,delta,blocked,engineer_name:(v.engineers||{}).name||'—'});
+  }
+ }
+ const hospitalMap=new Map();
+ calculated.filter(x=>!x.blocked).forEach(x=>{
+  if(!hospitalMap.has(x.hospital))hospitalMap.set(x.hospital,{name:x.hospital,devices:new Map(),visits:0,samples:0,lastVisit:''});
+  const h=hospitalMap.get(x.hospital);h.visits++;if(x.visit_date>h.lastVisit)h.lastVisit=x.visit_date;
+  if(!h.devices.has(x.deviceKey))h.devices.set(x.deviceKey,{serial:x.serial,visits:0,samples:0,lastVisit:''});
+  const d=h.devices.get(x.deviceKey);d.visits++;if(x.visit_date>d.lastVisit)d.lastVisit=x.visit_date;
+  if(x.delta!=null){h.samples+=x.delta;d.samples+=x.delta}
+ });
+ groups=[...hospitalMap.values()].filter(x=>x.samples>=threshold).sort((a,b)=>b.samples-a.samples||a.name.localeCompare(b.name,'ar'));
+ const totalSamples=groups.reduce((n,x)=>n+x.samples,0),totalDevices=groups.reduce((n,x)=>n+x.devices.size,0);
+ $('customerCount').textContent=formatNumber(groups.length);$('importantSamples').textContent=formatNumber(totalSamples);$('importantDevices').textContent=formatNumber(totalDevices);
+ $('customersBody').innerHTML=groups.length?groups.map((x,i)=>'<tr><td><span class="rank">'+(i+1)+'</span></td><td class="customer-name">'+esc(x.name)+'</td><td>'+formatNumber(x.devices.size)+'</td><td>'+formatNumber(x.visits)+'</td><td class="sample-number">'+formatNumber(x.samples)+'</td><td>'+esc(x.lastVisit||'—')+'</td><td class="customer-actions"><button class="btn btn-small" data-customer="'+encodeURIComponent(x.name)+'">تفاصيل الأجهزة</button></td></tr>').join(''):'<tr><td colspan="7"><div class="empty">لا توجد جهات وصلت إلى '+formatNumber(threshold)+' عينة في الفترة المحددة.</div></td></tr>';
+ $('customersBody').querySelectorAll('[data-customer]').forEach(b=>b.onclick=()=>showDetails(decodeURIComponent(b.dataset.customer)));
+ $('conflictCard').style.display=blockedConflicts.length?'block':'none';
+ $('conflictBody').innerHTML=blockedConflicts.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital_name||'جهة غير مسجلة')+'</td><td><b>'+esc(x.serial_number||'—')+'</b></td><td>'+esc(x.visit_date||'—')+'</td><td>'+formatNumber(x.previous_total_count)+'</td><td>'+formatNumber(x.current_total_count)+'</td><td style="color:#b42318;font-weight:800">'+formatNumber(x.difference)+'</td></tr>').join('');
+ $('detailPanel').classList.remove('open');
+}
+function showDetails(name){
+ const h=groups.find(x=>x.name===name);if(!h)return;
+ $('detailTitle').textContent='تفاصيل أجهزة — '+h.name;
+ const data=[...h.devices.values()].sort((a,b)=>b.samples-a.samples||a.serial.localeCompare(b.serial,'en',{numeric:true}));
+ $('detailBody').innerHTML=data.map(d=>'<tr><td><b>'+esc(d.serial)+'</b></td><td>'+formatNumber(d.visits)+'</td><td class="sample-number">'+formatNumber(d.samples)+'</td><td>'+esc(d.lastVisit||'—')+'</td></tr>').join('')||'<tr><td colspan="4">لا توجد تفاصيل.</td></tr>';
+ $('detailPanel').classList.add('open');$('detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
