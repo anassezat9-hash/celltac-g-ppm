@@ -26,7 +26,7 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
   <div>
    <h1>⭐ العملاء المهمين</h1>
    <div class="small" style="color:#0f6673;font-weight:700">الجهات التي تحقق 2,500 عينة أو أكثر خلال الفترة المحددة</div>
-   <div class="status-line">الحساب يعتمد على فرق Total Count بين كل زيارة والقراءة السابقة لنفس Serial، حتى لو كانت القراءة السابقة قبل بداية الفترة.</div>
+   <div class="status-line">حساب الشهر = آخر Total Count داخل الفترة − آخر Total Count قبل بداية الفترة، بشرط أن تكون القراءة السابقة خلال 30 يومًا قبل بداية الفترة.</div>
   </div>
   <div class="toolbar-actions">
    <span id="lastUpdated" class="last-updated">لم يتم التحديث بعد</span>
@@ -74,7 +74,14 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
    </table>
   </div>
  </div>
- <div class="small muted" style="margin:12px 2px">يتم تحديث القائمة تلقائيًا كل 5 دقائق أثناء فتح الصفحة، ويمكن تحديثها يدويًا. لا يتم احتساب أول قراءة للجهاز إذا لم توجد قراءة سابقة يمكن المقارنة بها.</div>
+ <div class="small muted" style="margin:12px 2px"><div class="card warning-card" id="uncalculatedCard" style="display:none;margin-top:14px">
+  <div class="section-title"><h2>📌 أجهزة لم يُحسب إنتاجها الشهري</h2><span class="small muted">لا تدخل في ترتيب العملاء حتى تتوفر قراءة صالحة</span></div>
+  <div class="table-wrap" style="margin-top:10px"><table class="report-table">
+   <thead><tr><th>الجهة</th><th>Serial</th><th>آخر زيارة داخل الفترة</th><th>آخر قراءة مرجعية متاحة</th><th>السبب</th></tr></thead>
+   <tbody id="uncalculatedBody"></tbody>
+  </table></div>
+ </div>
+ <div class="small muted" style="margin:12px 2px">يتم احتساب إنتاج الفترة مرة واحدة لكل جهاز من آخر قراءة داخل الفترة مقارنة بآخر قراءة مرجعية خلال الثلاثين يومًا السابقة لبداية الفترة. إذا كانت القراءة المرجعية أقدم من ذلك، لا نحسب الجهاز حتى لا ننسب إنتاج عدة أشهر إلى شهر واحد. يتم التحديث تلقائيًا كل 5 دقائق.</div></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js?v=20261107-important-customers1"></script>
@@ -133,27 +140,31 @@ function render(){
  const blockedHospitals=new Set(blockedConflicts.map(x=>x.hospital_name||'جهة غير مسجلة'));
  const approvedVisitIds=new Set(conflicts.filter(x=>x.status==='approved_closed').map(x=>x.visit_id).filter(Boolean));
  const ordered=[...visits].sort((a,b)=>String(a.visit_date||'').localeCompare(String(b.visit_date||''))||String(a.created_at||'').localeCompare(String(b.created_at||'')));
- const previous=new Map(),calculated=[];
- for(const v of ordered){
-  const d=v.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=String(d.serial_number||'').trim()||'بدون Serial';
-  const serialKey=serial!=='بدون Serial'?serial.toUpperCase():null;
-  const deviceKey=serialKey?'serial:'+serialKey:'device:'+(v.device_id||v.id);
-  const cur=Number(v.total_count),prev=previous.has(deviceKey)?Number(previous.get(deviceKey)):null;
-  previous.set(deviceKey,cur);
-  const inPeriod=(!from||v.visit_date>=from)&&(!to||v.visit_date<=to);
-  if(inPeriod&&Number.isFinite(cur)){
-   const blocked=blockedHospitals.has(hospital);
-   const delta=prev==null?null:(approvedVisitIds.has(v.id)?0:cur-prev);
-   calculated.push({...v,hospital,serial,deviceKey,prev,delta,blocked,engineer_name:(v.engineers||{}).name||'—'});
-  }
- }
+ const byDevice=new Map();
+ ordered.forEach(v=>{const key=v.device_id||'visit:'+v.id;if(!byDevice.has(key))byDevice.set(key,[]);byDevice.get(key).push(v)});
+ const calculated=[],uncalculated=[];
+ const baselineStart=shiftDate(from,-30);
+ byDevice.forEach(rows=>{
+  const inRange=rows.filter(v=>(!from||v.visit_date>=from)&&(!to||v.visit_date<=to));
+  if(!inRange.length)return;
+  const current=inRange[inRange.length-1];
+  const previous=rows.filter(v=>from&&v.visit_date<from&&v.visit_date>=baselineStart).slice(-1)[0]||null;
+  const olderPrevious=rows.filter(v=>from&&v.visit_date<baselineStart).slice(-1)[0]||null;
+  const d=current.devices||{},hospital=d.hospital_name||'جهة غير مسجلة',serial=String(d.serial_number||'').trim()||'بدون Serial';
+  const blocked=blockedHospitals.has(hospital),currentCount=Number(current.total_count),previousCount=previous?Number(previous.total_count):null;
+  const monthlySamples=previous&&Number.isFinite(currentCount)&&Number.isFinite(previousCount)?currentCount-previousCount:null;
+  const row={...current,hospital,serial,deviceKey:current.device_id||current.id,visitsInPeriod:inRange.length,monthlySamples,baselineDate:previous?.visit_date||null,baselineCount:previousCount,lastOlderDate:olderPrevious?.visit_date||null,blocked};
+  if(blocked){uncalculated.push({...row,reason:'توجد قراءة متعارضة مفتوحة للجهة'});return}
+  if(monthlySamples==null){uncalculated.push({...row,reason:'لا توجد قراءة مرجعية خلال 30 يومًا قبل بداية الفترة'});return}
+  if(monthlySamples<0){uncalculated.push({...row,reason:'العداد الحالي أقل من القراءة المرجعية؛ يلزم مراجعة احتمال تصفير العداد أو خطأ القراءة'});return}
+  calculated.push(row);
+ });
  const hospitalMap=new Map();
- calculated.filter(x=>!x.blocked).forEach(x=>{
+ calculated.forEach(x=>{
   if(!hospitalMap.has(x.hospital))hospitalMap.set(x.hospital,{name:x.hospital,devices:new Map(),visits:0,samples:0,lastVisit:''});
-  const h=hospitalMap.get(x.hospital);h.visits++;if(x.visit_date>h.lastVisit)h.lastVisit=x.visit_date;
-  if(!h.devices.has(x.deviceKey))h.devices.set(x.deviceKey,{serial:x.serial,visits:0,samples:0,lastVisit:''});
-  const d=h.devices.get(x.deviceKey);d.visits++;if(x.visit_date>d.lastVisit)d.lastVisit=x.visit_date;
-  if(x.delta!=null){h.samples+=x.delta;d.samples+=x.delta}
+  const h=hospitalMap.get(x.hospital);h.visits+=x.visitsInPeriod;if(x.visit_date>h.lastVisit)h.lastVisit=x.visit_date;
+  h.devices.set(x.deviceKey,{serial:x.serial,visits:x.visitsInPeriod,samples:x.monthlySamples,lastVisit:x.visit_date,baselineDate:x.baselineDate,baselineCount:x.baselineCount});
+  h.samples+=x.monthlySamples;
  });
  groups=[...hospitalMap.values()].filter(x=>x.samples>=threshold).sort((a,b)=>b.samples-a.samples||a.name.localeCompare(b.name,'ar'));
  const totalSamples=groups.reduce((n,x)=>n+x.samples,0),totalDevices=groups.reduce((n,x)=>n+x.devices.size,0);
@@ -162,6 +173,8 @@ function render(){
  $('customersBody').querySelectorAll('[data-customer]').forEach(b=>b.onclick=()=>showDetails(decodeURIComponent(b.dataset.customer)));
  $('conflictCard').style.display=blockedConflicts.length?'block':'none';
  $('conflictBody').innerHTML=blockedConflicts.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital_name||'جهة غير مسجلة')+'</td><td><b>'+esc(x.serial_number||'—')+'</b></td><td>'+esc(x.visit_date||'—')+'</td><td>'+formatNumber(x.previous_total_count)+'</td><td>'+formatNumber(x.current_total_count)+'</td><td style="color:#b42318;font-weight:800">'+formatNumber(x.difference)+'</td></tr>').join('');
+ $('uncalculatedCard').style.display=uncalculated.length?'block':'none';
+ $('uncalculatedBody').innerHTML=uncalculated.map(x=>'<tr class="warning-row"><td>'+esc(x.hospital)+'</td><td><b>'+esc(x.serial)+'</b></td><td>'+esc(x.visit_date||'—')+'</td><td>'+esc(x.baselineDate||x.lastOlderDate||'لا توجد قراءة سابقة')+'</td><td>'+esc(x.reason)+'</td></tr>').join('');
  $('detailPanel').classList.remove('open');
 }
 function showDetails(name){
