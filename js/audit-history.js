@@ -67,6 +67,8 @@
   $('auditRestoreSelected').style.display=showHiddenAudit?'inline-flex':'none';
   $('auditShowHidden').checked=showHiddenAudit;
   const selectedVisible=a.filter(x=>selectedAuditIds.has(x.id)).length;
+  $('auditHideSelected').disabled=showHiddenAudit||selectedVisible===0;
+  $('auditRestoreSelected').disabled=!showHiddenAudit||selectedVisible===0;
   $('auditSelectAll').checked=a.length>0&&selectedVisible===a.length;
   $('auditSelectAll').indeterminate=selectedVisible>0&&selectedVisible<a.length;
   $('auditRows').innerHTML=a.length?a.map(x=>{
