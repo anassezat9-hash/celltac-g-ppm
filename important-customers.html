@@ -157,6 +157,8 @@ function render(){
   if(blocked){uncalculated.push({...row,reason:'توجد قراءة متعارضة مفتوحة للجهة'});return}
   if(monthlySamples==null){uncalculated.push({...row,reason:'لا توجد قراءة مرجعية خلال 30 يومًا قبل بداية الفترة'});return}
   if(monthlySamples<0){uncalculated.push({...row,reason:'العداد الحالي أقل من القراءة المرجعية؛ يلزم مراجعة احتمال تصفير العداد أو خطأ القراءة'});return}
+  const readingGap=Math.round((new Date(current.visit_date+'T00:00:00')-new Date(previous.visit_date+'T00:00:00'))/86400000);
+  if(readingGap>45){uncalculated.push({...row,reason:'الفاصل بين القراءتين '+readingGap+' يومًا؛ أكبر من 45 يومًا ولا يصلح لاعتباره إنتاج شهر واحد'});return}
   calculated.push(row);
  });
  const hospitalMap=new Map();
