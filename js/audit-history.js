@@ -31,9 +31,12 @@
   visitDeletes.forEach(del=>{
    const deletedAt=timeOf(del),visitDate=visitDateOf(del);
    if(!del.device_id||!del.engineer_id||!visitDate||!Number.isFinite(deletedAt))return;
+   const replacementWindow=10*60*1000;
    const replacements=visitInserts.filter(ins=>{
     const delta=timeOf(ins)-deletedAt;
-    return ins.device_id===del.device_id&&ins.engineer_id===del.engineer_id&&ins.actor_id===del.actor_id&&visitDateOf(ins)===visitDate&&delta>0&&delta<=correctionWindow;
+    // A quick re-registration by the same engineer for the same device is a correction,
+    // even when the corrected visit date differs from the deleted entry.
+    return ins.device_id===del.device_id&&ins.engineer_id===del.engineer_id&&ins.actor_id===del.actor_id&&delta>0&&delta<=replacementWindow;
    }).sort((a,b)=>timeOf(a)-timeOf(b));
    if(!replacements.length)return;
    correctedAuditIds.add(del.id);
