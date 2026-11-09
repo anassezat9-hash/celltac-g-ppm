@@ -59,7 +59,7 @@ body{background:#f5f8fa}.page-wrap{max-width:1400px;margin:0 auto}.page-head{dis
   <div class="section-title"><h2 id="detailTitle">تفاصيل العميل</h2><button id="closeDetails" class="btn btn-small">إغلاق التفاصيل</button></div>
   <div class="table-wrap" style="margin-top:10px">
    <table class="report-table">
-    <thead><tr><th>Serial</th><th>القراءة قبل الفترة</th><th>آخر قراءة داخل الفترة</th><th>زيارات الفترة</th><th>عينات الفترة</th></tr></thead>
+    <thead><tr><th>Serial</th><th>القراءة السابقة وتاريخها</th><th>القراءة الحالية وتاريخها</th><th>عدد الأيام بين الزيارتين</th><th>زيارات الفترة</th><th>عينات الفترة</th></tr></thead>
     <tbody id="detailBody"></tbody>
    </table>
   </div>
@@ -169,7 +169,7 @@ function showDetails(name){
  const h=groups.find(x=>x.name===name);if(!h)return;
  $('detailTitle').textContent='تفاصيل أجهزة — '+h.name;
  const data=[...h.devices.values()].sort((a,b)=>b.samples-a.samples||a.serial.localeCompare(b.serial,'en',{numeric:true}));
- $('detailBody').innerHTML=data.map(d=>'<tr><td><b>'+esc(d.serial)+'</b></td><td>'+esc(d.baselineDate||'—')+' ('+formatNumber(d.baselineCount)+')</td><td>'+esc(d.lastVisit||'—')+' ('+formatNumber(d.currentCount)+')</td><td>'+formatNumber(d.visits)+'</td><td class="sample-number">'+formatNumber(d.samples)+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد تفاصيل.</td></tr>';
+ $('detailBody').innerHTML=data.map(d=>'<tr><td><b>'+esc(d.serial)+'</b></td><td>'+esc(d.previousDate||'—')+' ('+formatNumber(d.previousCount)+')</td><td>'+esc(d.lastVisit||'—')+' ('+formatNumber(d.currentCount)+')</td><td class="sample-number">'+formatNumber(d.gap)+' يوم</td><td>'+formatNumber(d.visits)+'</td><td>'+formatNumber(d.samples)+'</td></tr>').join('')||'<tr><td colspan="6">لا توجد تفاصيل.</td></tr>';
  $('detailPanel').classList.add('open');$('detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 </script>
